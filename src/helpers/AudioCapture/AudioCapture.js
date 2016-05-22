@@ -1,3 +1,5 @@
+import detectPitch from 'detect-pitch';
+
 function hasGetUserMedia() {
   return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
     navigator.mozGetUserMedia || navigator.msGetUserMedia);
@@ -9,6 +11,8 @@ let audioInput = null;
 let realAudioInput = null;
 let inputPoint = null;
 let analyserNode = null;
+let timeDomainDataArray = null;
+let latestPitch = 0;
 // let updateCallbackFunc = null;
 // let audioRecorder = null;
 // let rafID = null;
@@ -140,7 +144,7 @@ function gotStream(stream) {
   //    audioInput = convertToMono( input );
 
   analyserNode = audioContext.createAnalyser();
-  analyserNode.fftSize = 2048;
+  analyserNode.fftSize = 8192;
   inputPoint.connect(analyserNode);
 
   // audioRecorder = new Recorder(inputPoint);
@@ -237,4 +241,17 @@ export function getLatestFrequencyData() {
     // analyserContext.fillStyle = `hsl( ` + Math.round((i * 360) / numBars) + `, 100%, 50%)`;
     // analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
   }
+}
+
+export function getLatestPitch() {
+  if (!firstAudioDataReceived) {
+    return null;
+  }
+
+  const numSamples = analyserNode.fftSize;
+  timeDomainDataArray = new Float32Array(numSamples);
+  analyserNode.getFloatTimeDomainData(timeDomainDataArray);
+
+  latestPitch = audioContext.sampleRate / detectPitch(timeDomainDataArray, 0.0);
+  return latestPitch;
 }

@@ -12,4 +12,5 @@ export MiniInfoBar from './MiniInfoBar/MiniInfoBar';
 export SurveyForm from './SurveyForm/SurveyForm';
 export WidgetForm from './WidgetForm/WidgetForm';
 export MusicNotationPanel from './MusicNotationPanel/MusicNotationPanel';
-export AudioVolume from './AudioCapture/AudioVolume';
+export AudioVolume from './AudioAnalysis/AudioVolume';
+export AudioPitch from './AudioAnalysis/AudioPitch';
