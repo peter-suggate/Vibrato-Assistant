@@ -20,7 +20,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
   }
 
   state = {
-    volume: 0,
+    volumes: [],
     pitch: 0
   }
 
@@ -56,17 +56,17 @@ export default class BasicRealtimeAudioDisplay extends Component {
   // }
   moreAudioRecorded() {
     //    console.log('more audio recorded');
-    const mag = getLatestFrequencyData();
+    const frequencyAmplitudes = getLatestFrequencyData();
     const pitch = getLatestPitch();
-    this.setState({ volume: mag, pitch: pitch });
+    this.setState({ volumes: frequencyAmplitudes, pitch: pitch });
   }
 
   render() {
-    const {volume, pitch} = this.state;
+    const {volumes, pitch} = this.state;
 
     return (
       <div className="container">
-        <AudioVolume volume={volume} />
+        <AudioVolume volumes={volumes} />
         <AudioPitch pitch={pitch} />
       </div>
     );

@@ -155,7 +155,7 @@ function gotStream(stream) {
   zeroGain.connect(audioContext.destination);
   // updateAnalysers();
 
-//  updateLoop();
+  //  updateLoop();
   firstAudioDataReceived = true;
 }
 
@@ -174,7 +174,7 @@ export function beginAudioRecording() {
     return;
   }
 
-//  updateCallbackFunc = updateCallback;
+  //  updateCallbackFunc = updateCallback;
 
   if (!navigator.getUserMedia) {
     navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
@@ -210,14 +210,14 @@ export function stopAudioRecording() {
 
 export function getLatestFrequencyData() {
   if (!firstAudioDataReceived) {
-    return null;
+    return [];
   }
 
   // analyzer draw code here
   // var SPACING = 3;
   // var BAR_WIDTH = 1;
   // var numBars = Math.round(canvasWidth / SPACING);
-  const numBars = 1;
+  const numBars = 128;
   const freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
 
   analyserNode.getByteFrequencyData(freqByteData);
@@ -226,6 +226,8 @@ export function getLatestFrequencyData() {
   // analyserContext.fillStyle = '#F6D565';
   // analyserContext.lineCap = 'round';
   const multiplier = analyserNode.frequencyBinCount / numBars;
+
+  const magnitudes = [];
 
   // Draw rectangle for each frequency bin.
   for (let bar = 0; bar < numBars; ++bar) {
@@ -237,10 +239,12 @@ export function getLatestFrequencyData() {
     }
     magnitude = magnitude / multiplier;
     const magnitude2 = freqByteData[bar * multiplier];
-    return magnitude2;
+    magnitudes.push(magnitude2);
     // analyserContext.fillStyle = `hsl( ` + Math.round((i * 360) / numBars) + `, 100%, 50%)`;
     // analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
   }
+
+  return magnitudes;
 }
 
 export function getLatestPitch() {
