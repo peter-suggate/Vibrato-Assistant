@@ -1,12 +1,12 @@
 import React, {Component} from 'react';
-import { AudioVolume, AudioPitch } from 'components';
+import { AudioVolume, AudioPitch, MusicNotationPanel } from 'components';
 import {
   microphoneAvailable,
   beginAudioRecording,
   stopAudioRecording,
   getLatestFrequencyData,
   getLatestPitch
-} from '../../helpers/AudioCapture/AudioCapture';
+} from '../../helpers/Audio/AudioCapture';
 
 export default class BasicRealtimeAudioDisplay extends Component {
 
@@ -64,8 +64,11 @@ export default class BasicRealtimeAudioDisplay extends Component {
   render() {
     const {volumes, pitch} = this.state;
 
+    const pitches = [440, 880, 220, 110];
+
     return (
       <div className="container">
+        <MusicNotationPanel pitches={pitches} />
         <AudioVolume volumes={volumes} />
         <AudioPitch pitch={pitch} />
       </div>

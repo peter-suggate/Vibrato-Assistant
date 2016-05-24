@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router';
-import { CounterButton, MusicNotationPanel } from 'components';
+import { CounterButton } from 'components';
 // import config from '../../config';
 import Helmet from 'react-helmet';
 import BasicRealtimeAudioDisplay from '../AudioAnalysis/BasicRealtimeAudioDisplay';
@@ -15,7 +15,6 @@ export default class Home extends Component {
         <Helmet title="Home"/>
 
         <div className="container">
-          <MusicNotationPanel />
           <BasicRealtimeAudioDisplay />
 
           <div className={styles.counterContainer}>
