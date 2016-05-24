@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {PropTypes, Component} from 'react';
 import { AudioVolume, AudioPitch, MusicNotationPanel } from 'components';
 import {
   microphoneAvailable,
@@ -8,18 +8,25 @@ import {
   getLatestPitch
 } from '../../helpers/Audio/AudioCapture';
 import NoteRecorder from '../../helpers/Audio/NoteRecorder';
+import {connect} from 'react-redux';
+import {toggleAudioRecording} from 'redux/modules/toggleAudioRecording';
 
+@connect(
+  state => ({recordingAudio: state.audioAnalysis.recordingAudio})
+  )
 export default class BasicRealtimeAudioDisplay extends Component {
+  static propTypes = {
+    recordingAudio: PropTypes.bool,
+    dispatch: PropTypes.func.isRequired
+  }
 
   constructor(props) {
     super(props);
-    // this.state = { volume: 0 };
-    this.noteRecorder = null;
-    this.recordedNotePitches = [];
 
-    this.rafID = null;
-    this.animating = true;
+    this.init();
+
     this.updateLoop = this.updateLoop.bind(this);
+    this.toggleRecording = this.toggleRecording.bind(this);
   }
 
   state = {
@@ -28,19 +35,54 @@ export default class BasicRealtimeAudioDisplay extends Component {
   }
 
   componentDidMount() {
-    // this.state = {volume: 0, pitch: 0};
+    this.startStopRecording();
+  }
 
+  componentDidUpdate() {
+    this.startStopRecording();
+  }
+
+  componentWillUnmount() {
+    this.stopRecording();
+  }
+
+  startStopRecording() {
     if (!microphoneAvailable()) {
       return (<div>Noes, we can't' record from your mic!</div>);
     }
 
     beginAudioRecording(this.moreAudioRecorded.bind(this));
 
+    const {recordingAudio} = this.props;
+    const wasAnimating = this.animating;
+
+    if (wasAnimating !== recordingAudio) {
+      if (this.props.recordingAudio) {
+        this.startRecording();
+      } else {
+        this.stopRecording();
+      }
+    }
+  }
+
+  init() {
+    this.noteRecorder = null;
+    this.recordedNotePitches = [];
+    this.rafID = null;
+    this.animating = false;
+  }
+
+  startRecording() {
+    this.init();
+
+    this.animating = true;
+
     this.updateLoop();
   }
 
-  componentWillUnmount() {
+  stopRecording() {
     this.animating = false;
+
     stopAudioRecording();
   }
 
@@ -54,11 +96,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     this.moreAudioRecorded();
   }
 
-  // props = {
-  //   className: ''
-  // }
   moreAudioRecorded() {
-    //    console.log('more audio recorded');
     const pitch = getLatestPitch();
 
     if (this.noteRecorder === null) {
@@ -76,18 +114,31 @@ export default class BasicRealtimeAudioDisplay extends Component {
     this.setState({ volumes: frequencyAmplitudes, pitch: pitch });
   }
 
+  toggleRecording() {
+    // Dispatch an action.
+    const {dispatch} = this.props;
+    dispatch(toggleAudioRecording());
+  }
+
   render() {
     const {volumes, pitch} = this.state;
+    const {recordingAudio} = this.props;
     const className = 'btn btn-default';
+
+    const audioElements = (
+      <div>
+        <MusicNotationPanel pitches={this.recordedNotePitches} />
+        <AudioVolume volumes={volumes} />
+        <AudioPitch pitch={pitch} />
+      </div>
+    );
 
     return (
       <div className="container">
         <button className={className} onClick={this.toggleRecording}>
-          You have clicked me {count} time{count === 1 ? '' : 's'}.
+          Recording: {recordingAudio}.
         </button>
-        <MusicNotationPanel pitches={this.recordedNotePitches} />
-        <AudioVolume volumes={volumes} />
-        <AudioPitch pitch={pitch} />
+        {audioElements}
       </div>
     );
   }
