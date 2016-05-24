@@ -39,7 +39,9 @@ export default class BasicRealtimeAudioDisplay extends Component {
   }
 
   componentDidUpdate() {
-    this.startStopRecording();
+    if (this.animating !== this.props.recordingAudio) {
+      this.startStopRecording();
+    }
   }
 
   componentWillUnmount() {
@@ -47,12 +49,6 @@ export default class BasicRealtimeAudioDisplay extends Component {
   }
 
   startStopRecording() {
-    if (!microphoneAvailable()) {
-      return (<div>Noes, we can't' record from your mic!</div>);
-    }
-
-    beginAudioRecording(this.moreAudioRecorded.bind(this));
-
     const {recordingAudio} = this.props;
     const wasAnimating = this.animating;
 
@@ -74,6 +70,12 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
   startRecording() {
     this.init();
+
+    if (!microphoneAvailable()) {
+      return (<div>Noes, we can't' record from your mic!</div>);
+    }
+
+    beginAudioRecording(this.moreAudioRecorded.bind(this));
 
     this.animating = true;
 
@@ -108,6 +110,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     if (newNoteAdded) {
       const notePitch = this.noteRecorder.getLatestNotePitch();
       this.recordedNotePitches.push(notePitch);
+      console.log('new note added, pitch: ', notePitch);
     }
 
     const frequencyAmplitudes = getLatestFrequencyData();

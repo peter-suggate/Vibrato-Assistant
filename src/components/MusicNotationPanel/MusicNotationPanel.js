@@ -13,15 +13,24 @@ export default class MusicNotationPanel extends Component {
     pitches: PropTypes.array.isRequired
   }
 
+  constructor(props) {
+    super(props);
+
+    this.renderedPitches = 0;
+  }
+
   componentDidMount() {
     this.renderMusic();
   }
 
   componentDidUpdate() {
-    this.renderMusic();
+    if (this.props.pitches.length !== this.renderedPitches) {
+      this.renderMusic();
+    }
   }
 
   renderMusic() {
+    console.log('rendering music, with notes: ' + this.props.pitches.length);
     const containerElement = this.refs.myContainerElement;
     while (containerElement.firstChild) {
       containerElement.removeChild(containerElement.firstChild);
@@ -65,6 +74,8 @@ export default class MusicNotationPanel extends Component {
       // Render voice
       voice.draw(ctx, stave);
     }
+
+    this.renderedPitches = pitches.length;
   }
 
   render() {
