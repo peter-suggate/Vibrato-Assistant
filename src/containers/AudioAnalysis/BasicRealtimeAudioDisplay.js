@@ -7,12 +7,15 @@ import {
   getLatestFrequencyData,
   getLatestPitch
 } from '../../helpers/Audio/AudioCapture';
+import NoteRecorder from '../../helpers/Audio/NoteRecorder';
 
 export default class BasicRealtimeAudioDisplay extends Component {
 
   constructor(props) {
     super(props);
     // this.state = { volume: 0 };
+    this.noteRecorder = null;
+    this.recordedNotePitches = [];
 
     this.rafID = null;
     this.animating = true;
@@ -56,19 +59,33 @@ export default class BasicRealtimeAudioDisplay extends Component {
   // }
   moreAudioRecorded() {
     //    console.log('more audio recorded');
-    const frequencyAmplitudes = getLatestFrequencyData();
     const pitch = getLatestPitch();
+
+    if (this.noteRecorder === null) {
+      this.noteRecorder = new NoteRecorder(20);
+      this.noteRecorder.start();
+    }
+
+    const newNoteAdded = this.noteRecorder.addCurrentPitch(pitch);
+    if (newNoteAdded) {
+      const notePitch = this.noteRecorder.getLatestNotePitch();
+      this.recordedNotePitches.push(notePitch);
+    }
+
+    const frequencyAmplitudes = getLatestFrequencyData();
     this.setState({ volumes: frequencyAmplitudes, pitch: pitch });
   }
 
   render() {
     const {volumes, pitch} = this.state;
-
-    const pitches = [440, 880, 220, 110];
+    const className = 'btn btn-default';
 
     return (
       <div className="container">
-        <MusicNotationPanel pitches={pitches} />
+        <button className={className} onClick={this.toggleRecording}>
+          You have clicked me {count} time{count === 1 ? '' : 's'}.
+        </button>
+        <MusicNotationPanel pitches={this.recordedNotePitches} />
         <AudioVolume volumes={volumes} />
         <AudioPitch pitch={pitch} />
       </div>

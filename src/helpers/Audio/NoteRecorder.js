@@ -1,14 +1,16 @@
 // Receives a steady stream of pitches from the client (at a highish sampling
 // rate) and spit out the best guess of a note at the specified frequency.
-export class NoteProducer {
-  constructor(noteFrequency) {
-    this.noteFrequency = noteFrequency;
+export default class NoteRecorder {
+  constructor(noteBpm) {
+    this.noteBpm = noteBpm;
     this.pitchBuffer = [];
     this.latestNotePitch = 0;
+    this.currentNoteStartTime = null;
   }
 
   start() {
     this.firstNoteStartTime = Date.now();
+    this.currentNoteStartTime = this.firstNoteStartTime;
   }
 
   addCurrentPitch(pitch) {
@@ -17,6 +19,7 @@ export class NoteProducer {
     if (this._canOutputNewNote()) {
       this.latestNotePitch = this._calculateRepresentativeNotePitch();
       this.pitchBuffer = [];
+      this.currentNoteStartTime = this.firstNoteStartTime + this._periodMsec();
       return true;
     }
 
@@ -27,7 +30,7 @@ export class NoteProducer {
     this.pitchBuffer = [];
   }
 
-  getClosestNotePitch() {
+  getLatestNotePitch() {
     return this.latestNotePitch;
   }
 
@@ -39,10 +42,14 @@ export class NoteProducer {
     return this._numberOfNotesInInterval(this.currentNoteStartTime, time) > 0;
   }
 
+  _periodMsec() {
+    const periodMsec = 1000.0 * (60 / this.noteBpm);
+    return periodMsec;
+  }
+
   _numberOfNotesInInterval(timeStart, timeEnd) {
     const timeDifference = timeEnd - timeStart;
-    const periodMsec = 1000.0 / this.noteFrequency;
-    return Math.floor(timeDifference / periodMsec);
+    return Math.floor(timeDifference / this._periodMsec());
   }
 
   _calculateRepresentativeNotePitch() {

@@ -105,6 +105,10 @@ function frequencyToNoteNamePlusOffset(input) {
 }
 
 export function pitchToNoteName(pitch) {
-  const noteName = frequencyToNoteNamePlusOffset(pitch).noteName;
-  return noteName;
+  const note = frequencyToNoteNamePlusOffset(pitch);
+  if (note === null) {
+    return null;
+  }
+
+  return note.noteName;
 }
