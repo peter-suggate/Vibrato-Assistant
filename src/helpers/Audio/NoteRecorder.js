@@ -4,7 +4,7 @@ export default class NoteRecorder {
   constructor(noteBpm) {
     this.noteBpm = noteBpm;
     this.pitchBuffer = [];
-    this.latestNotePitch = 0;
+    this.latestNote = null;
     this.currentNoteStartTime = null;
   }
 
@@ -17,9 +17,14 @@ export default class NoteRecorder {
     this.pitchBuffer.push(pitch);
 
     if (this._canOutputNewNote()) {
-      this.latestNotePitch = this._calculateRepresentativeNotePitch();
+      this.latestNote = {
+        notePitch: this._calculateRepresentativeNotePitch(),
+        startTimeMsec: this.currentNoteStartTime - this.firstNoteStartTime,
+        durationMsec: this._periodMsec()
+      };
+
       this.pitchBuffer = [];
-      this.currentNoteStartTime = this.firstNoteStartTime + this._periodMsec();
+      this.currentNoteStartTime += this._periodMsec();
       return true;
     }
 
@@ -30,15 +35,14 @@ export default class NoteRecorder {
     this.pitchBuffer = [];
   }
 
-  getLatestNotePitch() {
-    return this.latestNotePitch;
+  getLatestNote() {
+    return this.latestNote;
   }
 
   // Private methods
 
   _canOutputNewNote() {
     const time = Date.now();
-
     return this._numberOfNotesInInterval(this.currentNoteStartTime, time) > 0;
   }
 
@@ -49,7 +53,11 @@ export default class NoteRecorder {
 
   _numberOfNotesInInterval(timeStart, timeEnd) {
     const timeDifference = timeEnd - timeStart;
-    return Math.floor(timeDifference / this._periodMsec());
+    const numNotesRational = timeDifference / this._periodMsec();
+    if (numNotesRational <= 0) {
+      return 0;
+    }
+    return Math.floor(numNotesRational);
   }
 
   _calculateRepresentativeNotePitch() {

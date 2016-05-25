@@ -8,10 +8,10 @@ import counter from './counter';
 import {reducer as form} from 'redux-form';
 import info from './info';
 import widgets from './widgets';
-import audioRec from './toggleAudioRecording';
+import audioRec from './audioRecorder';
 
 export default combineReducers({
-  audioAnalysis: audioRec,
+  audioRecorder: audioRec,
   routing: routerReducer,
   reduxAsyncConnect,
   auth,

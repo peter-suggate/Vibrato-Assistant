@@ -30,7 +30,6 @@ export default class MusicNotationPanel extends Component {
   }
 
   renderMusic() {
-    console.log('rendering music, with notes: ' + this.props.pitches.length);
     const containerElement = this.refs.myContainerElement;
     while (containerElement.firstChild) {
       containerElement.removeChild(containerElement.firstChild);
@@ -47,7 +46,12 @@ export default class MusicNotationPanel extends Component {
 
     const notes = [];
     const {pitches} = this.props;
-    pitches.forEach(pitch => {
+    const pitchesToDisplay = pitches.length > 4 ? pitches.slice(pitches.length - 4) : pitches;
+
+    const numNotes = pitches.length;
+    console.log('rendering music, with notes: ' + numNotes);
+
+    pitchesToDisplay.forEach(pitch => {
       const noteName = AudioProcessing.pitchToNoteName(pitch);
       if (noteName && noteName.length > 0) {
         notes.push(new Vex.Flow.StaveNote({ keys: [noteName], duration: `q` }));
@@ -56,10 +60,10 @@ export default class MusicNotationPanel extends Component {
       }
     });
 
-    if (pitches.length > 0) {
+    if (numNotes > 0) {
       // Create a voice in 4/4
       const voice = new Vex.Flow.Voice({
-        num_beats: 4,
+        num_beats: Math.min(numNotes, 4),
         beat_value: 4,
         resolution: Vex.Flow.RESOLUTION
       });
