@@ -13,12 +13,6 @@ let inputPoint = null;
 let analyserNode = null;
 let timeDomainDataArray = null;
 let latestPitch = 0;
-// let updateCallbackFunc = null;
-// let audioRecorder = null;
-// let rafID = null;
-// let analyserContext = null;
-// var canvasWidth, canvasHeight;
-// var recIndex = 0;
 
 function initAudioContext() {
   if (typeof AudioContext !== `undefined`) {

@@ -38,7 +38,7 @@ export default class MusicNotationPanel extends Component {
     this.renderer = new Vex.Flow.Renderer(containerElement, Vex.Flow.Renderer.Backends.SVG);
 
     const svgElement = containerElement.firstChild;
-    svgElement.setAttribute(`viewBox`, `0 0 800 200`);
+    svgElement.setAttribute(`viewBox`, `0 0 800 150`);
 
     const ctx = this.renderer.getContext();
     const stave = new Vex.Flow.Stave(10, 0, 500);

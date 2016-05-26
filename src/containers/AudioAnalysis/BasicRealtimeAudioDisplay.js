@@ -1,5 +1,5 @@
 import React, {PropTypes, Component} from 'react';
-import { AudioVolume, AudioPitch, MusicNotationPanel } from 'components';
+import { AudioVolume, AudioPitch, MusicNotationPanel, TimePlot } from 'components';
 import {
   microphoneAvailable,
   beginAudioRecording,
@@ -36,7 +36,8 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
   state = {
     volumes: [],
-    pitch: 0
+    pitch: 0,
+    pitches: []
   }
 
   componentDidMount() {
@@ -104,6 +105,12 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
   moreAudioRecorded() {
     const pitch = getLatestPitch();
+    const {pitches} = this.state;
+    pitches.push(pitch);
+    if (pitches.length >= 800) {
+      pitches.shift();
+    }
+    pitches.push(pitch);
 
     if (this.noteRecorder === null) {
       this.noteRecorder = new NoteRecorder(60);
@@ -117,7 +124,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     }
 
     const frequencyAmplitudes = getLatestFrequencyData();
-    this.setState({ volumes: frequencyAmplitudes, pitch: pitch });
+    this.setState({ volumes: frequencyAmplitudes, pitch, pitches });
   }
 
   addNoteAction(note, startTime, duration) {
@@ -131,13 +138,14 @@ export default class BasicRealtimeAudioDisplay extends Component {
   }
 
   render() {
-    const {volumes, pitch} = this.state;
+    const {volumes, pitch, pitches} = this.state;
     const {recordingAudio, recordedNotePitches} = this.props;
     const className = 'btn btn-default';
 
     const audioElements = (
       <div>
         <MusicNotationPanel pitches={recordedNotePitches} />
+        <TimePlot values={pitches} valueMax={2000} valueMin={0} />
         <AudioVolume volumes={volumes} />
         <AudioPitch pitch={pitch} />
       </div>
@@ -146,7 +154,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     return (
       <div className="container">
         <button className={className} onClick={this.toggleRecordingAction}>
-          Recording: {recordingAudio ? `true` : `false`}.
+          {recordingAudio ? `Stop Recording` : `Start Recording`}
         </button>
         {audioElements}
       </div>

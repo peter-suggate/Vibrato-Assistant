@@ -14,3 +14,4 @@ export WidgetForm from './WidgetForm/WidgetForm';
 export MusicNotationPanel from './MusicNotationPanel/MusicNotationPanel';
 export AudioVolume from './AudioAnalysis/AudioVolume';
 export AudioPitch from './AudioAnalysis/AudioPitch';
+export TimePlot from './AudioAnalysis/TimePlot';
