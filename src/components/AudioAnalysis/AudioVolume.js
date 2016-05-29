@@ -45,6 +45,7 @@ export default class AudioVolume extends Component {
     const stride = widthInPixels / numVolumes;
     let leftPixel = 0;
     let totalVolume = 0;
+    let index = 0;
     volumes.forEach(function drawVolumeBar(volume) {
       const height = this.linearInterpolate(
         volume,
@@ -55,6 +56,13 @@ export default class AudioVolume extends Component {
 
       totalVolume += volume;
       leftPixel += stride;
+
+      if (index % 2 === 0) {
+        context.fillStyle = `#FF0000`;
+      } else {
+        context.fillStyle = `#0000FF`;
+      }
+      index++;
     }.bind(this));
 
     return totalVolume / numVolumes;

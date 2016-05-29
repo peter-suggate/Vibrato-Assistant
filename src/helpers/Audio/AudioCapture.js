@@ -1,3 +1,4 @@
+import detectPitchMPM from './detectPitch';
 import detectPitch from 'detect-pitch';
 
 function hasGetUserMedia() {
@@ -13,6 +14,9 @@ let inputPoint = null;
 let analyserNode = null;
 let timeDomainDataArray = null;
 let latestPitch = 0;
+const medianFilter = [];
+const MEDIAN_FILTER_LENGTH = 9;
+const useMPM = true;
 
 function initAudioContext() {
   if (typeof AudioContext !== `undefined`) {
@@ -57,15 +61,15 @@ function initAudioContext() {
 //     }
 // }
 
-// function convertToMono(input) {
-//   var splitter = audioContext.createChannelSplitter(2);
-//   var merger = audioContext.createChannelMerger(2);
+function convertToMono(input) {
+  const splitter = audioContext.createChannelSplitter(2);
+  const merger = audioContext.createChannelMerger(2);
 
-//   input.connect(splitter);
-//   splitter.connect(merger, 0, 0);
-//   splitter.connect(merger, 0, 1);
-//   return merger;
-// }
+  input.connect(splitter);
+  splitter.connect(merger, 0, 0);
+  splitter.connect(merger, 0, 1);
+  return merger;
+}
 
 // function updateAnalysers(time) {
 //   if (!analyserContext) {
@@ -133,23 +137,23 @@ function gotStream(stream) {
   // Create an AudioNode from the stream.
   realAudioInput = audioContext.createMediaStreamSource(stream);
   audioInput = realAudioInput;
+  // audioInput.connect(inputPoint);
+
+  audioInput = convertToMono(audioInput);
   audioInput.connect(inputPoint);
 
-  //    audioInput = convertToMono( input );
-
   analyserNode = audioContext.createAnalyser();
-  analyserNode.fftSize = 8192;
+  analyserNode.fftSize = 2048;
   inputPoint.connect(analyserNode);
 
   // audioRecorder = new Recorder(inputPoint);
 
-  const zeroGain = audioContext.createGain();
-  zeroGain.gain.value = 0.0;
-  inputPoint.connect(zeroGain);
-  zeroGain.connect(audioContext.destination);
-  // updateAnalysers();
+  // const zeroGain = audioContext.createGain();
+  // zeroGain.gain.value = 0.0;
+  // inputPoint.connect(zeroGain);
+  // zeroGain.connect(audioContext.destination);
+  audioInput.connect(audioContext.destination);
 
-  //  updateLoop();
   firstAudioDataReceived = true;
 }
 
@@ -172,10 +176,6 @@ export function beginAudioRecording() {
 
   if (!navigator.getUserMedia) {
     navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-  } else if (!navigator.cancelAnimationFrame) {
-    navigator.cancelAnimationFrame = navigator.webkitCancelAnimationFrame || navigator.mozCancelAnimationFrame;
-  } else if (!navigator.requestAnimationFrame) {
-    navigator.requestAnimationFrame = navigator.webkitRequestAnimationFrame || navigator.mozRequestAnimationFrame;
   }
 
   initAudioContext();
@@ -247,9 +247,32 @@ export function getLatestPitch() {
   }
 
   const numSamples = analyserNode.fftSize;
-  timeDomainDataArray = new Float32Array(numSamples);
+  if (timeDomainDataArray === null) {
+    timeDomainDataArray = new Float32Array(numSamples);
+  }
   analyserNode.getFloatTimeDomainData(timeDomainDataArray);
 
-  latestPitch = audioContext.sampleRate / detectPitch(timeDomainDataArray, 0.0);
-  return latestPitch;
+  if (useMPM) {
+    latestPitch = detectPitchMPM(timeDomainDataArray, audioContext.sampleRate);
+  } else {
+    const latestPeriod = detectPitch(timeDomainDataArray);
+    if (latestPeriod > 0) {
+      latestPitch = audioContext.sampleRate / latestPeriod;
+    } else {
+      latestPitch = 0;
+    }
+  }
+
+  medianFilter.push(latestPitch);
+  if (medianFilter.length > MEDIAN_FILTER_LENGTH) {
+    medianFilter.shift();
+  }
+  const sortedFilter = medianFilter.slice(0);
+  sortedFilter.sort((vala, valb) => {
+    return vala - valb;
+  });
+  const medianLength = sortedFilter.length;
+  return sortedFilter[Math.floor(medianLength / 2)];
+
+  // return latestPitch;
 }

@@ -1,14 +1,16 @@
-const soundConst = Math.log(2) / 12;
+// const soundConst = Math.log(2) / 12;
 
 export function noteToPitch(note) {
-  return 0.5 * Math.exp(soundConst * note);
+  // return 0.5 * Math.exp(soundConst * note);
+  return 440 * Math.exp2((note / 12) - 69);
 }
 
 export function pitchToNote(pitch) {
-  return (Math.log(2 * pitch)) / soundConst;
+//  return (Math.log(2 * pitch)) / soundConst;
+  return 69 + 12 * Math.log2(pitch / 440);
 }
 
-function frequencyToNoteNamePlusOffset(input) {
+export function pitchToNoteNamePlusOffset(input) {
   if (isNaN(input) || (input === 0)) {
     return null;
   } else if ((input < 27.5) || (input > 14080)) {
@@ -105,7 +107,7 @@ function frequencyToNoteNamePlusOffset(input) {
 }
 
 export function pitchToNoteName(pitch) {
-  const note = frequencyToNoteNamePlusOffset(pitch);
+  const note = pitchToNoteNamePlusOffset(pitch);
   if (note === null) {
     return null;
   }

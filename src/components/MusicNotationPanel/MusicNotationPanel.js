@@ -49,7 +49,6 @@ export default class MusicNotationPanel extends Component {
     const pitchesToDisplay = pitches.length > 4 ? pitches.slice(pitches.length - 4) : pitches;
 
     const numNotes = pitches.length;
-    console.log('rendering music, with notes: ' + numNotes);
 
     pitchesToDisplay.forEach(pitch => {
       const noteName = AudioProcessing.pitchToNoteName(pitch);

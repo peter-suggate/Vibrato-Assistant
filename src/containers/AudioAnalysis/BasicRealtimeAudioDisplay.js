@@ -1,5 +1,5 @@
 import React, {PropTypes, Component} from 'react';
-import { AudioVolume, AudioPitch, MusicNotationPanel, TimePlot } from 'components';
+import { AudioVolume, AudioPitch, MusicNotationPanel, PitchTimePlot } from 'components';
 import {
   microphoneAvailable,
   beginAudioRecording,
@@ -105,11 +105,14 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
   moreAudioRecorded() {
     const pitch = getLatestPitch();
-    const {pitches} = this.state;
-    pitches.push(pitch);
+    let {pitches} = this.state;
+    // pitches.push(pitch);
     if (pitches.length >= 800) {
-      pitches.shift();
+      // pitches.shift();
+      pitches = [];
     }
+    // const logPitch = pitch > 0 ? Math.log2(pitch) : 0;
+    // pitches.push(logPitch);
     pitches.push(pitch);
 
     if (this.noteRecorder === null) {
@@ -142,12 +145,20 @@ export default class BasicRealtimeAudioDisplay extends Component {
     const {recordingAudio, recordedNotePitches} = this.props;
     const className = 'btn btn-default';
 
+    const pitchMax = 4020;
+    const pitchMin = 55;
+    // const pitchMax = Math.log2(4020);
+    // const pitchMin = Math.log2(55);
+    // const pitchMax = Math.log2(500);
+    // const pitchMin = Math.log2(400);
+
     const audioElements = (
       <div>
-        <MusicNotationPanel pitches={recordedNotePitches} />
-        <TimePlot values={pitches} valueMax={2000} valueMin={0} />
+        <h3>Current pitch: {pitch} Hz</h3>
+        <PitchTimePlot values={pitches} valueMax={pitchMax} valueMin={pitchMin} />
         <AudioVolume volumes={volumes} />
         <AudioPitch pitch={pitch} />
+        <MusicNotationPanel pitches={recordedNotePitches} />
       </div>
     );
 

@@ -26,12 +26,16 @@ export default class TimePlot extends Component {
 
   static attributes = {
     widthInPixels: 800,
-    heightInPixels: 200
+    heightInPixels: 400
   }
 
   linearInterpolate(val, fromMin, fromMax, toMin, toMax) {
     const tmp = (val - fromMin) / (fromMax - fromMin);
     return (tmp + toMin) * (toMax - toMin);
+  }
+
+  scaleValueToPixel(pitch) {
+    return pitch;
   }
 
   drawTrace(context) {
@@ -41,11 +45,14 @@ export default class TimePlot extends Component {
     context.beginPath();
     context.moveTo(0, values);
 
+    const scaledValueMin = this.scaleValueToPixel(valueMin);
+    const scaledValueMax = this.scaleValueToPixel(valueMax);
+
     let xPixel = 0;
-    values.forEach(function drawLibe(value) {
+    values.forEach(function drawLine(value) {
       const yPixel = this.linearInterpolate(
-        value,
-        valueMin, valueMax,
+        this.scaleValueToPixel(value),
+        scaledValueMin, scaledValueMax,
         0, heightInPixels
       );
 
