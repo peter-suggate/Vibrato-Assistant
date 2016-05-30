@@ -1,5 +1,5 @@
 import React, {PropTypes, Component} from 'react';
-import { AudioVolume, AudioPitch, MusicNotationPanel, PitchTimePlot } from 'components';
+import { AudioVolume, AudioPitch, MusicNotationPanel, PitchPlot } from 'components';
 import {
   microphoneAvailable,
   beginAudioRecording,
@@ -104,7 +104,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
   }
 
   moreAudioRecorded() {
-    const pitch = getLatestPitch();
+    let pitch = getLatestPitch();
     let {pitches} = this.state;
     // pitches.push(pitch);
     if (pitches.length >= 800) {
@@ -113,6 +113,9 @@ export default class BasicRealtimeAudioDisplay extends Component {
     }
     // const logPitch = pitch > 0 ? Math.log2(pitch) : 0;
     // pitches.push(logPitch);
+    if (pitch === null || !(pitch >= 0)) {
+      pitch = 0;
+    }
     pitches.push(pitch);
 
     if (this.noteRecorder === null) {
@@ -145,20 +148,30 @@ export default class BasicRealtimeAudioDisplay extends Component {
     const {recordingAudio, recordedNotePitches} = this.props;
     const className = 'btn btn-default';
 
-    const pitchMax = 4020;
-    const pitchMin = 55;
+    // const pitchMax = 4020;
+    // const pitchMin = 55;
     // const pitchMax = Math.log2(4020);
     // const pitchMin = Math.log2(55);
     // const pitchMax = Math.log2(500);
     // const pitchMin = Math.log2(400);
 
+        // <PitchTimePlot values={pitches} valueMax={pitchMax} valueMin={pitchMin} />
+    const showAll = false;
+    let all = null;
+    if (showAll) {
+      all = (
+        <div>
+          <AudioVolume volumes={volumes} />
+          <AudioPitch pitch={pitch} />
+          <MusicNotationPanel pitches={recordedNotePitches} />
+        </div>
+      );
+    }
     const audioElements = (
       <div>
         <h3>Current pitch: {pitch} Hz</h3>
-        <PitchTimePlot values={pitches} valueMax={pitchMax} valueMin={pitchMin} />
-        <AudioVolume volumes={volumes} />
-        <AudioPitch pitch={pitch} />
-        <MusicNotationPanel pitches={recordedNotePitches} />
+        <PitchPlot pitches={pitches} />
+        {all}
       </div>
     );
 
