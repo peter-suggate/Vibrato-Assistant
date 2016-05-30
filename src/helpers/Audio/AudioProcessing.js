@@ -2,7 +2,7 @@
 
 export function noteToPitch(note) {
   // return 0.5 * Math.exp(soundConst * note);
-  return 440 * Math.exp2((note / 12) - 69);
+  return 440 * Math.pow(2, (note - 69) / 12);
 }
 
 export function pitchToNote(pitch) {

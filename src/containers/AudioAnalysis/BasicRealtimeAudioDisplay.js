@@ -1,5 +1,7 @@
 import React, {PropTypes, Component} from 'react';
 import { AudioVolume, AudioPitch, MusicNotationPanel, PitchPlot } from 'components';
+import {connect} from 'react-redux';
+import {toggleAudioRecording, addNote} from 'redux/modules/audioRecorder';
 import {
   microphoneAvailable,
   beginAudioRecording,
@@ -8,8 +10,7 @@ import {
   getLatestPitch
 } from '../../helpers/Audio/AudioCapture';
 import NoteRecorder from '../../helpers/Audio/NoteRecorder';
-import {connect} from 'react-redux';
-import {toggleAudioRecording, addNote} from 'redux/modules/audioRecorder';
+import nextFakePitch from '../../helpers/Audio/TestHelpers.js';
 
 @connect(
   state => ({
@@ -111,6 +112,12 @@ export default class BasicRealtimeAudioDisplay extends Component {
       // pitches.shift();
       pitches = [];
     }
+
+    const test = true;
+    if (test) {
+      pitch = nextFakePitch();
+    }
+
     // const logPitch = pitch > 0 ? Math.log2(pitch) : 0;
     // pitches.push(logPitch);
     if (pitch === null || !(pitch >= 0)) {
