@@ -2,7 +2,8 @@ import React, {Component, PropTypes} from 'react';
 
 export default class PitchPlot extends Component {
   static propTypes = {
-    pitches: PropTypes.array.isRequired
+    pitches: PropTypes.array.isRequired,
+    notes: PropTypes.array.isRequired
   }
 
   constructor(props) {
@@ -25,7 +26,7 @@ export default class PitchPlot extends Component {
     return (tmp + toMin) * (toMax - toMin);
   }
 
-  scalePitchToPixel(pitch) {
+  scalePitchToPixelY(pitch) {
     const {heightInPixels} = PitchPlot.attributes;
     const {logPitchMin, logPitchMax} = this;
     const logPitch = Math.log2(pitch);
@@ -35,6 +36,10 @@ export default class PitchPlot extends Component {
       logPitchMin, logPitchMax,
       0, heightInPixels
     );
+  }
+
+  scaleTimeToPixelX(timeMsec) {
+    return timeMsec / 100.0;
   }
 
   flipY(yPixel) {
@@ -49,16 +54,20 @@ export default class PitchPlot extends Component {
 
     let index = 0;
     let prevPitchPixel = 0;
-    let curX = 0;
-    pitches.forEach(pitch => {
+    let curX = this.scaleTimeToPixelX(0);
+    pitches.forEach(pitchAndTime => {
+      const {pitch, timeMsec} = pitchAndTime;
+
       if (pitch > 0) {
-        const pitchPixel = this.scalePitchToPixel(pitch);
+        const nextX = this.scaleTimeToPixelX(timeMsec);
+        const pitchPixel = this.scalePitchToPixelY(pitch);
         const coords = {
           x1: curX,
           y1: this.flipY(prevPitchPixel),
-          x2: curX + 1,
+          x2: nextX,
           y2: this.flipY(pitchPixel)
         };
+        curX = nextX;
         const key = 'pitch_line_' + index;
 
         lines.push(
@@ -81,7 +90,7 @@ export default class PitchPlot extends Component {
     let index = 0;
 
     staffLineFrequencies.forEach(pitch => {
-      const pitchPixel = this.flipY(this.scalePitchToPixel(pitch));
+      const pitchPixel = this.flipY(this.scalePitchToPixelY(pitch));
       const coords = {
         x1: 0,
         y1: pitchPixel,
@@ -98,21 +107,45 @@ export default class PitchPlot extends Component {
     return lines;
   }
 
+  renderNotes() {
+    const {notes} = this.props;
+
+    const noteHeads = [];
+    let index = 0;
+
+    notes.forEach(note => {
+      const {startTimeMsec, notePitch} = note;
+
+      const pitchPixel = this.flipY(this.scalePitchToPixelY(notePitch));
+      const coord = {
+        cx: this.scaleTimeToPixelX(startTimeMsec),
+        cy: pitchPixel
+      };
+      const key = 'note_head_' + index++;
+
+      noteHeads.push(
+        <circle {...coord} r={5} fill="black" key={key} />
+      );
+    });
+
+    return noteHeads;
+  }
+
   render() {
     const {widthInPixels, heightInPixels} = PitchPlot.attributes;
 
     const trace = this.renderTrace();
     const staff = this.renderStaff();
+    const notes = this.renderNotes();
 
     return (
       <div>
         <svg width={widthInPixels} height={heightInPixels}>
-          <circle cx={50} cy={50} r={10} fill="red" />
           {staff}
           {trace}
+          {notes}
         </svg>
       </div>
       );
-    // return (<div>Mic volume: {volume}</div>);
   }
 }

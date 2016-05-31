@@ -32,11 +32,9 @@ export function toggleAudioRecording() {
   };
 }
 
-export function addNote(note, startTimeMsec, durationMsec) {
+export function addNote(notePitch, startTimeMsec, durationMsec) {
   return {
     type: ADD_NOTE,
-    note,
-    startTimeMsec,
-    durationMsec
+    note: {notePitch, startTimeMsec, durationMsec }
   };
 }

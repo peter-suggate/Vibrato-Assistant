@@ -1,6 +1,6 @@
 // Receives a steady stream of pitches from the client (at a highish sampling
 // rate) and spit out the best guess of a note at the specified frequency.
-export default class NoteRecorder {
+export default class FixedPeriodNoteRecorder {
   constructor(noteBpm) {
     this.noteBpm = noteBpm;
     this.pitchBuffer = [];

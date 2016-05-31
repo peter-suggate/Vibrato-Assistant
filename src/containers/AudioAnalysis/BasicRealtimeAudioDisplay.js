@@ -9,19 +9,22 @@ import {
   getLatestFrequencyData,
   getLatestPitch
 } from '../../helpers/Audio/AudioCapture';
-import NoteRecorder from '../../helpers/Audio/NoteRecorder';
-import nextFakePitch from '../../helpers/Audio/TestHelpers.js';
+import FixedPeriodNoteRecorder from '../../helpers/Audio/FixedPeriodNoteRecorder';
+import VariablePeriodNoteRecorder from '../../helpers/Audio/VariablePeriodNoteRecorder';
+import nextFakePitch from '../../helpers/Audio/TestHelpers';
+
+const useVariableNoteRecorder = true;
 
 @connect(
   state => ({
     recordingAudio: state.audioRecorder.recording,
-    recordedNotePitches: state.audioRecorder.recordedNotes
+    recordedNotes: state.audioRecorder.recordedNotes
   })
   )
 export default class BasicRealtimeAudioDisplay extends Component {
   static propTypes = {
     recordingAudio: PropTypes.bool,
-    recordedNotePitches: PropTypes.array,
+    recordedNotes: PropTypes.array,
     dispatch: PropTypes.func.isRequired
   }
 
@@ -118,17 +121,21 @@ export default class BasicRealtimeAudioDisplay extends Component {
       pitch = nextFakePitch();
     }
 
-    // const logPitch = pitch > 0 ? Math.log2(pitch) : 0;
-    // pitches.push(logPitch);
     if (pitch === null || !(pitch >= 0)) {
       pitch = 0;
     }
-    pitches.push(pitch);
 
     if (this.noteRecorder === null) {
-      this.noteRecorder = new NoteRecorder(60);
+      if (useVariableNoteRecorder) {
+        this.noteRecorder = new VariablePeriodNoteRecorder();
+      } else {
+        this.noteRecorder = new FixedPeriodNoteRecorder(60);
+      }
       this.noteRecorder.start();
     }
+
+    const pitchAndTime = {pitch, timeMsec: this.noteRecorder.timeAfterStartMsec()};
+    pitches.push(pitchAndTime);
 
     const newNoteAdded = this.noteRecorder.addCurrentPitch(pitch);
     if (newNoteAdded) {
@@ -152,7 +159,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
   render() {
     const {volumes, pitch, pitches} = this.state;
-    const {recordingAudio, recordedNotePitches} = this.props;
+    const {recordingAudio, recordedNotes} = this.props;
     const className = 'btn btn-default';
 
     // const pitchMax = 4020;
@@ -170,14 +177,14 @@ export default class BasicRealtimeAudioDisplay extends Component {
         <div>
           <AudioVolume volumes={volumes} />
           <AudioPitch pitch={pitch} />
-          <MusicNotationPanel pitches={recordedNotePitches} />
+          <MusicNotationPanel pitches={recordedNotes} />
         </div>
       );
     }
     const audioElements = (
       <div>
         <h3>Current pitch: {pitch} Hz</h3>
-        <PitchPlot pitches={pitches} />
+        <PitchPlot pitches={pitches} notes={recordedNotes} />
         {all}
       </div>
     );
