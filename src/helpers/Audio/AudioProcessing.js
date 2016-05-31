@@ -1,5 +1,7 @@
 // const soundConst = Math.log(2) / 12;
 
+export const noteIndexConcertA = 69;
+
 export function noteToPitch(note) {
   // return 0.5 * Math.exp(soundConst * note);
   return 440 * Math.pow(2, (note - 69) / 12);

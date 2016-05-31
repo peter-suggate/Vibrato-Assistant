@@ -39,7 +39,7 @@ export default class PitchPlot extends Component {
   }
 
   scaleTimeToPixelX(timeMsec) {
-    return timeMsec / 100.0;
+    return timeMsec / 40.0;
   }
 
   flipY(yPixel) {

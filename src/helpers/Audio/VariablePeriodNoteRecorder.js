@@ -54,7 +54,7 @@ export default class VariablePeriodNoteRecorder {
       return false; // Not enough pitches yet.
     }
 
-    // For now, rudimentary scheme that checks the most recent pitch with
+    // For now, rudimentary scheme that checks the most recent pitch against
     // its previous.
     const mostRecentPitch = Math.log2(pitchBuffer[numPitches - 1]);
     const previousPitch = Math.log2(pitchBuffer[numPitches - 2]);
