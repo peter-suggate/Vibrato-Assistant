@@ -20,7 +20,7 @@ export default class VariablePeriodNoteRecorder {
   addCurrentPitch(pitch, quantaDurationMsec) {
     const ret = this._addCurrentPitch(pitch);
 
-    if (quantaDurationMsec !== 'undefined') {
+    if (typeof(quantaDurationMsec) !== 'undefined') {
       // Pass a valid quantaDurationMsec when driving the note recording process offline.
       this.noteDurationMsec += quantaDurationMsec;
     } else {

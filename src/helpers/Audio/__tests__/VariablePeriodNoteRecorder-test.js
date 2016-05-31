@@ -17,7 +17,7 @@ describe('VariablePeriodNoteRecorder', () => {
     });
   });
 
-  describe('getLatestNote', () => {
+  describe('getLatestNote (offline)', () => {
     const noteRecorder = new VariablePeriodNoteRecorder();
     noteRecorder.start();
 
@@ -45,6 +45,20 @@ describe('VariablePeriodNoteRecorder', () => {
       note = noteRecorder.getLatestNote();
       expect(note.durationMsec).to.equal(noteDuration);
       expect(note.startTimeMsec).to.equal(6);
+    });
+  });
+
+  describe('getLatestNote (online)', () => {
+    const noteRecorder = new VariablePeriodNoteRecorder();
+    noteRecorder.start();
+
+    it('returns the first note when a new pitch is added of sensible duration and start time', () => {
+      expect(noteRecorder.addCurrentPitch(440)).to.equal(false);
+      expect(noteRecorder.addCurrentPitch(660)).to.equal(true);
+      const note = noteRecorder.getLatestNote();
+      expect(note.notePitch).to.equal(440);
+      expect(note.durationMsec.to.be.at.least(0));
+      expect(note.startTimeMsec.to.be.at.least(0));
     });
   });
 });
