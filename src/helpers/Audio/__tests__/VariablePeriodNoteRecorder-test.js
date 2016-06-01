@@ -4,6 +4,7 @@ import VariablePeriodNoteRecorder from 'helpers/Audio/VariablePeriodNoteRecorder
 describe('VariablePeriodNoteRecorder', () => {
   describe('addCurrentPitch', () => {
     const noteRecorder = new VariablePeriodNoteRecorder();
+    noteRecorder.start();
     it('returns false when called in presence of only a single pitch', () => {
       expect(noteRecorder.addCurrentPitch(440)).to.equal(false);
     });
@@ -57,8 +58,8 @@ describe('VariablePeriodNoteRecorder', () => {
       expect(noteRecorder.addCurrentPitch(660)).to.equal(true);
       const note = noteRecorder.getLatestNote();
       expect(note.notePitch).to.equal(440);
-      expect(note.durationMsec.to.be.at.least(0));
-      expect(note.startTimeMsec.to.be.at.least(0));
+      expect(note.durationMsec).to.be.at.least(0);
+      expect(note.startTimeMsec).to.be.at.least(0);
     });
   });
 });

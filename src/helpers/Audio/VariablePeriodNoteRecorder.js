@@ -1,38 +1,84 @@
+class TimeTracker
+{
+  constructor(online) {
+    this.online = online;
+    this.firstIntervalStartTime = null;
+    this.curIntervalStartTime = 0;
+    this.curIntervalDuration = 0;
+  }
+
+  start() {
+    this.firstIntervalStartTime = Date.now();
+
+    this.beginNewInterval();
+  }
+
+  quantaAdded(msec) {
+    if (!this.online) {
+      this.curIntervalDuration += msec;
+    }
+  }
+
+  beginNewInterval() {
+    if (this.online) {
+      this.curIntervalStartTime = Date.now();
+    } else {
+      this.curIntervalDuration = 0;
+    }
+  }
+
+  finishCurrentInterval() {
+    if (!this.online) {
+      this.curIntervalStartTime += this.curIntervalDuration;
+    }
+  }
+
+  currentIntervalStartTime() {
+    if (this.online) {
+      return this.curIntervalStartTime - this.firstIntervalStartTime;
+    }
+
+    return this.curIntervalStartTime;
+  }
+
+  currentIntervalDuration() {
+    if (this.online) {
+      return Date.now() - this.curIntervalStartTime;
+    }
+
+    return this.curIntervalDuration;
+  }
+}
+
 // Receives a steady stream of pitches from the client (at a highish sampling
 // rate) and spits out notes of variable length.
 export default class VariablePeriodNoteRecorder {
   constructor() {
-    this.pitchBuffer = [];
+    this.currentNotePitches = [];
     this.latestNote = null;
-    this.currentNoteStartTime = null;
   }
 
   start() {
-    this.firstNoteStartTime = Date.now();
-    this.currentNoteStartTime = this.firstNoteStartTime;
-    this.noteDurationMsec = 0;
-  }
-
-  timeAfterStartMsec() {
-    return Date.now() - this.firstNoteStartTime;
+    this.timeTracker = new TimeTracker();
+    this.timeTracker.start();
   }
 
   addCurrentPitch(pitch, quantaDurationMsec) {
-    const ret = this._addCurrentPitch(pitch);
+    this._ensureValid();
 
-    if (typeof(quantaDurationMsec) !== 'undefined') {
-      // Pass a valid quantaDurationMsec when driving the note recording process offline.
-      this.noteDurationMsec += quantaDurationMsec;
-    } else {
-      // Pass in no quantaDurationMsec when driving the note recording process online (in "real time").
-      this.noteDurationMsec = Date.now() - this.currentNoteStartTime;
+    const logPitch = this._toInternalPitchRep(pitch);
+    const noteAdded = this._detectedEndOfCurrentNote(logPitch);
+    if (noteAdded) {
+      this._finishCurrentNote();
+      this._beginNewNote();
     }
-
-    return ret;
+    this._addCurrentPitch(logPitch, quantaDurationMsec);
+    return noteAdded;
   }
 
   stop() {
-    this.pitchBuffer = [];
+    this.currentNotePitches = [];
+    this.timeTracker = null;
   }
 
   getLatestNote() {
@@ -41,29 +87,41 @@ export default class VariablePeriodNoteRecorder {
 
   // Private methods
 
-  _addCurrentPitch(pitch) {
-    const logPitch = this._toInternalPitchRep(pitch);
-    if (this._detectedEndOfNote(logPitch)) {
-      // const noteDurationMsec = Date.now() - this.currentNoteStartTime;
-      this.latestNote = {
-        notePitch: this._toPitchInHz(this._calculateRepresentativeNotePitch()),
-        startTimeMsec: this.currentNoteStartTime - this.firstNoteStartTime,
-        durationMsec: this.noteDurationMsec
-      };
-
-      this.pitchBuffer = [logPitch];
-      this.currentNoteStartTime += this.noteDurationMsec;
-      this.noteDurationMsec = 0;
-      return true;
+  _ensureValid() {
+    if (!this.timeTracker) {
+      throw new Error('start() must be called first');
     }
-
-    this.pitchBuffer.push(logPitch);
-    return false;
   }
 
-  _detectedEndOfNote(logPitch) {
-    const {pitchBuffer} = this;
-    const numPitches = pitchBuffer.length;
+  _addCurrentPitch(logPitch, quantaDurationMsec) {
+    this.currentNotePitches.push(logPitch);
+
+    if (typeof(quantaDurationMsec) !== 'undefined') {
+      // Pass a valid quantaDurationMsec when driving the note recording process offline.
+      this.timeTracker.quantaAdded(quantaDurationMsec);
+    }
+  }
+
+  _beginNewNote() {
+    this.timeTracker.beginNewInterval();
+  }
+
+  _finishCurrentNote() {
+    const {timeTracker} = this;
+
+    this.latestNote = {
+      notePitch: this._toPitchInHz(this._calculateRepresentativeNotePitch()),
+      startTimeMsec: timeTracker.currentIntervalStartTime(),
+      durationMsec: timeTracker.currentIntervalDuration()
+    };
+
+    timeTracker.finishCurrentInterval();
+    this.currentNotePitches = [];
+  }
+
+  _detectedEndOfCurrentNote(logPitch) {
+    const {currentNotePitches} = this;
+    const numPitches = currentNotePitches.length;
 
     if (numPitches === 0) {
       return false; // Not enough pitches yet.
@@ -72,7 +130,7 @@ export default class VariablePeriodNoteRecorder {
     // For now, rudimentary scheme that checks the most recent pitch against
     // its previous.
     const mostRecentPitch = logPitch;
-    const previousPitch = pitchBuffer[numPitches - 1];
+    const previousPitch = currentNotePitches[numPitches - 1];
     const ratio = mostRecentPitch / previousPitch;
     let delta = 0;
     if (ratio >= 1) {
@@ -89,10 +147,10 @@ export default class VariablePeriodNoteRecorder {
 
   _calculateRepresentativeNotePitch() {
     let total = 0;
-    this.pitchBuffer.forEach((pitch) => {
+    this.currentNotePitches.forEach((pitch) => {
       total += pitch;
     });
-    total /= this.pitchBuffer.length;
+    total /= this.currentNotePitches.length;
     return total;
   }
 
