@@ -3,7 +3,7 @@ import VariablePeriodNoteRecorder from 'helpers/Audio/VariablePeriodNoteRecorder
 
 describe('VariablePeriodNoteRecorder', () => {
   describe('addCurrentPitch', () => {
-    const noteRecorder = new VariablePeriodNoteRecorder();
+    const noteRecorder = new VariablePeriodNoteRecorder(true);
     noteRecorder.start();
     it('returns false when called in presence of only a single pitch', () => {
       expect(noteRecorder.addCurrentPitch(440)).to.equal(false);
@@ -50,7 +50,7 @@ describe('VariablePeriodNoteRecorder', () => {
   });
 
   describe('getLatestNote (online)', () => {
-    const noteRecorder = new VariablePeriodNoteRecorder();
+    const noteRecorder = new VariablePeriodNoteRecorder(true);
     noteRecorder.start();
 
     it('returns the first note when a new pitch is added of sensible duration and start time', () => {
@@ -60,6 +60,32 @@ describe('VariablePeriodNoteRecorder', () => {
       expect(note.notePitch).to.equal(440);
       expect(note.durationMsec).to.be.at.least(0);
       expect(note.startTimeMsec).to.be.at.least(0);
+    });
+  });
+
+  describe('timeAfterStartMsec (offline)', () => {
+    const noteRecorder = new VariablePeriodNoteRecorder();
+    noteRecorder.start();
+
+    const noteDuration = 7;
+    it('returns correct time after a pitch has been added', () => {
+      noteRecorder.addCurrentPitch(440, noteDuration);
+      expect(noteRecorder.timeAfterStartMsec()).to.equal(noteDuration);
+    });
+
+    it('returns correct time after two pitches have been added', () => {
+      noteRecorder.addCurrentPitch(660, 2 * noteDuration);
+      expect(noteRecorder.timeAfterStartMsec()).to.equal(noteDuration + 2 * noteDuration);
+    });
+  });
+
+  describe('timeAfterStartMsec (online)', () => {
+    const noteRecorder = new VariablePeriodNoteRecorder(true);
+    noteRecorder.start();
+
+    it('returns correct time after a pitch has been added', () => {
+      noteRecorder.addCurrentPitch(440);
+      expect(noteRecorder.timeAfterStartMsec()).to.be.at.least(0);
     });
   });
 });

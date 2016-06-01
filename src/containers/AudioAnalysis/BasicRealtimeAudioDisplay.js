@@ -127,7 +127,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
     if (this.noteRecorder === null) {
       if (useVariableNoteRecorder) {
-        this.noteRecorder = new VariablePeriodNoteRecorder();
+        this.noteRecorder = new VariablePeriodNoteRecorder(true);
       } else {
         this.noteRecorder = new FixedPeriodNoteRecorder(60);
       }

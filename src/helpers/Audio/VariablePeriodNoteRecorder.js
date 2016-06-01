@@ -48,18 +48,31 @@ class TimeTracker
 
     return this.curIntervalDuration;
   }
+
+  currentTimeAfterStartMsec() {
+    if (this.online) {
+      return Date.now() - this.firstIntervalStartTime;
+    }
+
+    return this.curIntervalStartTime + this.curIntervalDuration;
+  }
 }
 
 // Receives a steady stream of pitches from the client (at a highish sampling
 // rate) and spits out notes of variable length.
 export default class VariablePeriodNoteRecorder {
-  constructor() {
+  constructor(online) {
+    this.online = false;
+    if (typeof(online) !== 'undefined') {
+      this.online = online;
+    }
+
     this.currentNotePitches = [];
     this.latestNote = null;
   }
 
   start() {
-    this.timeTracker = new TimeTracker();
+    this.timeTracker = new TimeTracker(this.online);
     this.timeTracker.start();
   }
 
@@ -77,12 +90,20 @@ export default class VariablePeriodNoteRecorder {
   }
 
   stop() {
+    this._ensureValid();
+
     this.currentNotePitches = [];
     this.timeTracker = null;
   }
 
   getLatestNote() {
     return this.latestNote;
+  }
+
+  timeAfterStartMsec() {
+    this._ensureValid();
+
+    return this.timeTracker.currentTimeAfterStartMsec();
   }
 
   // Private methods
@@ -96,7 +117,11 @@ export default class VariablePeriodNoteRecorder {
   _addCurrentPitch(logPitch, quantaDurationMsec) {
     this.currentNotePitches.push(logPitch);
 
-    if (typeof(quantaDurationMsec) !== 'undefined') {
+    const hasQuantaParam = typeof(quantaDurationMsec) !== 'undefined';
+    if (hasQuantaParam === this.online) {
+      throw new Error('addCurrentPitch: mismatch between our online/offline status and how we are being passed the quantaDurationMsec param');
+    }
+    if (hasQuantaParam) {
       // Pass a valid quantaDurationMsec when driving the note recording process offline.
       this.timeTracker.quantaAdded(quantaDurationMsec);
     }
