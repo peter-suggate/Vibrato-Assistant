@@ -1,5 +1,10 @@
 import { expect } from 'chai';
 import VariablePeriodNoteRecorder from 'helpers/Audio/VariablePeriodNoteRecorder';
+import { logOfDifferenceBetweenAdjacentSemitones } from 'helpers/Audio/AudioProcessing';
+
+function notePlusVariation(noteHz, variationPercent) {
+  return noteHz + Math.pow(2, variationPercent * logOfDifferenceBetweenAdjacentSemitones());
+}
 
 describe('VariablePeriodNoteRecorder', () => {
   describe('addCurrentPitch', () => {
@@ -86,6 +91,23 @@ describe('VariablePeriodNoteRecorder', () => {
     it('returns correct time after a pitch has been added', () => {
       noteRecorder.addCurrentPitch(440);
       expect(noteRecorder.timeAfterStartMsec()).to.be.at.least(0);
+    });
+  });
+
+  describe('getLatestNote (offline)', () => {
+    const noteRecorder = new VariablePeriodNoteRecorder();
+    noteRecorder.start();
+
+    const noteDuration = 1;
+    const variationPercent = 10; // percent of a semitone range
+
+    it('handles slight variations in pitch gracefully', () => {
+      expect(noteRecorder.addCurrentPitch(440, noteDuration)).to.equal(false);
+      const slightlyDifferentNote = notePlusVariation(440, variationPercent);
+      expect(noteRecorder.addCurrentPitch(slightlyDifferentNote, noteDuration)).to.equal(false);
+      // expect(noteRecorder.addCurrentPitch(660, noteDuration)).to.equal(true);
+      // const note = noteRecorder.getLatestNote();
+      // expect(note.notePitch).to.equal(440);
     });
   });
 });

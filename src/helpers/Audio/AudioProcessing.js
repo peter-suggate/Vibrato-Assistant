@@ -12,6 +12,16 @@ export function pitchToNote(pitch) {
   return 69 + 12 * Math.log2(pitch / 440);
 }
 
+const gLogOfDifferenceBetweenAdjacentSemitones = (Math.log2(880) - Math.log2(440)) / 12; // 12 semitones in an oxtave;
+
+export function logOfDifferenceBetweenAdjacentSemitones() {
+  return gLogOfDifferenceBetweenAdjacentSemitones;
+}
+
+export function round2dp(number) {
+  return Math.round(number * 100) / 100;
+}
+
 export function pitchToNoteNamePlusOffset(input) {
   if (isNaN(input) || (input === 0)) {
     return null;

@@ -1,3 +1,8 @@
+import {
+  round2dp,
+  logOfDifferenceBetweenAdjacentSemitones
+} from './AudioProcessing';
+
 class TimeTracker
 {
   constructor(online) {
@@ -163,7 +168,8 @@ export default class VariablePeriodNoteRecorder {
     } else {
       delta = 1 - ratio;
     }
-    if (delta > 0.0005) {
+    const maxVariationWithinNote = logOfDifferenceBetweenAdjacentSemitones() * 0.5;
+    if (delta > maxVariationWithinNote) {
       return true;
     }
 
@@ -179,15 +185,11 @@ export default class VariablePeriodNoteRecorder {
     return total;
   }
 
-  _round2dp(number) {
-    return Math.round(number * 100) / 100;
-  }
-
   _toInternalPitchRep(pitchInHz) {
     return Math.log2(pitchInHz);
   }
 
   _toPitchInHz(pitchInternalRep) {
-    return this._round2dp(Math.pow(2, pitchInternalRep));
+    return round2dp(Math.pow(2, pitchInternalRep));
   }
 }
