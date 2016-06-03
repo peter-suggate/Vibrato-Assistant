@@ -163,7 +163,6 @@ export default class VariablePeriodNoteRecorder {
     const previousPitch = currentNotePitches[numPitches - 1];
     const delta = Math.abs(mostRecentPitch - previousPitch);
     const maxVariationWithinNote = 0.5 * logOfDifferenceBetweenAdjacentSemitones();
-    console.log(delta, maxVariationWithinNote);
     if (delta > maxVariationWithinNote) {
       return true;
     }
