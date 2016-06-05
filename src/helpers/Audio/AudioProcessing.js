@@ -140,3 +140,5 @@ export function frequncyAmplitudesToVolume(frequencyAmplitudes) {
 
   return totalVolume / frequencyAmplitudes.length;
 }
+
+export const MIN_RECOGNISABLE_PITCH = 55;

@@ -1,5 +1,5 @@
 import React, {PropTypes, Component} from 'react';
-import { AudioVolume, AudioPitch, MusicNotationPanel, PitchPlot } from 'components';
+import { AudioVolume, AudioPitch, MusicNotationPanel, PitchPlot, FpsReadout } from 'components';
 import {connect} from 'react-redux';
 import {toggleAudioRecording, addNote} from 'redux/modules/audioRecorder';
 import {
@@ -12,9 +12,11 @@ import {
 import { frequncyAmplitudesToVolume } from '../../helpers/Audio/AudioProcessing';
 import FixedPeriodNoteRecorder from '../../helpers/Audio/FixedPeriodNoteRecorder';
 import VariablePeriodNoteRecorder from '../../helpers/Audio/VariablePeriodNoteRecorder';
-import nextFakePitch from '../../helpers/Audio/TestHelpers';
+import { nextFakePitch, nextFakeVolume } from '../../helpers/Audio/TestHelpers';
 
 const useVariableNoteRecorder = true;
+const FPS_WINDOW_SIZE = 10;
+const RECORD_NOTES = false;
 
 @connect(
   state => ({
@@ -37,6 +39,8 @@ export default class BasicRealtimeAudioDisplay extends Component {
     this.updateLoop = this.updateLoop.bind(this);
     this.toggleRecordingAction = this.toggleRecordingAction.bind(this);
     this.addNoteAction = this.addNoteAction.bind(this);
+    this.recentFps = [];
+    this.lastRenderTime = null;
   }
 
   state = {
@@ -110,12 +114,11 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
   moreAudioRecorded() {
     let pitch = getLatestPitch();
-    let {pitches} = this.state;
-    // pitches.push(pitch);
-    if (pitches.length >= 800) {
-      // pitches.shift();
-      pitches = [];
-    }
+    const {pitches} = this.state;
+
+    // if (pitches.length >= 800) {
+    //   pitches = [];
+    // }
 
     const test = false;
     if (test) {
@@ -136,15 +139,25 @@ export default class BasicRealtimeAudioDisplay extends Component {
     }
 
     const frequencyAmplitudes = getLatestFrequencyData();
-    const totalVolume = frequncyAmplitudesToVolume(frequencyAmplitudes);
+    let totalVolume = 0;
+    if (test) {
+      totalVolume = nextFakeVolume();
+    } else {
+      totalVolume = frequncyAmplitudesToVolume(frequencyAmplitudes);
+      totalVolume /= 80;
+    }
 
     const pitchVolAndTime = {pitch, volume: totalVolume, timeMsec: this.noteRecorder.timeAfterStartMsec()};
     pitches.push(pitchVolAndTime);
 
-    const newNoteAdded = this.noteRecorder.addCurrentPitch(pitch);
-    if (newNoteAdded) {
-      const {notePitch, startTimeMsec, durationMsec} = this.noteRecorder.getLatestNote();
-      this.addNoteAction(notePitch, startTimeMsec, durationMsec);
+    if (RECORD_NOTES) {
+      if (this.noteRecorder) {
+        const newNoteAdded = this.noteRecorder.addCurrentPitch(pitch);
+        if (newNoteAdded) {
+          const {notePitch, startTimeMsec, durationMsec} = this.noteRecorder.getLatestNote();
+          this.addNoteAction(notePitch, startTimeMsec, durationMsec);
+        }
+      }
     }
 
     this.setState({ volumes: frequencyAmplitudes, pitch, pitches });
@@ -160,11 +173,40 @@ export default class BasicRealtimeAudioDisplay extends Component {
     dispatch(toggleAudioRecording());
   }
 
+  updateFps() {
+    if (this.lastRenderTime === null) {
+      this.lastRenderTime = Date.now();
+      return;
+    }
+
+    const now = Date.now();
+    this.recentFps.push(1000 / (now - this.lastRenderTime));
+    this.lastRenderTime = now;
+    if (this.recentFps.length > FPS_WINDOW_SIZE) {
+      this.recentFps.shift();
+    }
+  }
+
+  currentFps() {
+    let accum = 0;
+    this.recentFps.forEach(fps => {
+      accum += fps;
+    });
+
+    if (accum === 0) {
+      return 0;
+    }
+
+    return accum / this.recentFps.length;
+  }
+
   render() {
     const {volumes, pitch, pitches} = this.state;
     const {recordingAudio, recordedNotes} = this.props;
     const className = 'btn btn-default';
 
+    this.updateFps();
+    const fps = this.currentFps();
     // const pitchMax = 4020;
     // const pitchMin = 55;
     // const pitchMax = Math.log2(4020);
@@ -188,6 +230,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     }
     const audioElements = (
       <div>
+        <FpsReadout fps={fps} />
         <h3>Current pitch: {pitch} Hz</h3>
         <h3>Current volume: {totalVolume} dB</h3>
         <PitchPlot pitches={pitches} notes={recordedNotes} />

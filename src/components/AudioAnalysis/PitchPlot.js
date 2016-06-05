@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react';
+import {MIN_RECOGNISABLE_PITCH} from 'helpers/Audio/AudioProcessing';
 
 export default class PitchPlot extends Component {
   static propTypes = {
@@ -17,8 +18,8 @@ export default class PitchPlot extends Component {
     widthInPixels: 800,
     heightInPixels: 400,
     staffLineFrequencies: [329.63, 392.00, 493.88, 587.33, 698.46],
-    pitchMin: 110,
-    pitchMax: 1760
+    pitchMin: MIN_RECOGNISABLE_PITCH,
+    pitchMax: 3520
   }
 
   linearInterpolate(val, fromMin, fromMax, toMin, toMax) {
@@ -47,40 +48,93 @@ export default class PitchPlot extends Component {
     return heightInPixels - yPixel;
   }
 
+  calcXOffset() {
+    const {widthInPixels} = PitchPlot.attributes;
+    const {pitches} = this.props;
+    const numPitches = pitches.length;
+    if (numPitches === 0) {
+      return 0;
+    }
+
+    const xOffset = Math.max(0, this.scaleTimeToPixelX(pitches[numPitches - 1].timeMsec) - widthInPixels);
+    return xOffset;
+  }
+
   renderTrace() {
     const {pitches} = this.props;
+    const {heightInPixels} = PitchPlot.attributes;
 
     const lines = [];
 
     let index = 0;
-    let prevPitchPixel = 0;
-    let curX = this.scaleTimeToPixelX(0);
-    pitches.forEach(pitchVolAndTime => {
-      const {pitch, volume, timeMsec} = pitchVolAndTime;
+    const numPitches = pitches.length;
+    if (numPitches < 2) {
+      return lines;
+    }
 
-      if (pitch > 0) {
-        const nextX = this.scaleTimeToPixelX(timeMsec);
-        const pitchPixel = this.scalePitchToPixelY(pitch);
+    const xOffset = this.calcXOffset();
+
+    let {pitch, volume, timeMsec} = pitches[numPitches - 1];
+    let prevX = xOffset + this.scaleTimeToPixelX(timeMsec);
+    let prevY = this.flipY(this.scalePitchToPixelY(pitch));
+
+    for (let idx = numPitches - 2; idx > 0; --idx) {
+      const curPitch = pitches[idx];
+      pitch = curPitch.pitch;
+      volume = curPitch.volume;
+      timeMsec = curPitch.timeMsec;
+
+      const curX = this.scaleTimeToPixelX(timeMsec) - xOffset;
+      const curY = this.flipY(this.scalePitchToPixelY(pitch));
+      if (pitch >= MIN_RECOGNISABLE_PITCH && curY <= heightInPixels && prevY <= heightInPixels) {
         const coords = {
-          x1: curX,
-          y1: this.flipY(prevPitchPixel),
-          x2: nextX,
-          y2: this.flipY(pitchPixel)
+          x1: prevX,
+          y1: prevY,
+          x2: curX,
+          y2: curY
         };
-        curX = nextX;
+
         const key = 'pitch_line_' + index;
         const intensity = Math.floor(255 * volume);
         const color = `rgb(${intensity}, ${intensity}, ${intensity}` + `)`;
+        const strokeWidth = `${0.5 + (volume * 5)}`;
         lines.push(
-          <line {...coords} stroke={color} strokeWidth="2" key={key} />
+          <line {...coords} strokeLinecap="round" stroke={color} strokeWidth={strokeWidth} key={key} />
         );
 
-        prevPitchPixel = pitchPixel;
+        index++;
       }
 
-      // curX++;
-      index++;
-    });
+      prevY = curY;
+      prevX = curX;
+    }
+
+    // pitches.forEach(pitchVolAndTime => {
+    //   const {pitch, volume, timeMsec} = pitchVolAndTime;
+
+    //   if (pitch > 0) {
+    //     const nextX = widthInPixels - this.scaleTimeToPixelX(timeMsec);
+    //     const pitchPixel = this.scalePitchToPixelY(pitch);
+    //     const coords = {
+    //       x1: curX,
+    //       y1: this.flipY(prevPitchPixel),
+    //       x2: nextX,
+    //       y2: this.flipY(pitchPixel)
+    //     };
+    //     curX = nextX;
+    //     const key = 'pitch_line_' + index;
+    //     const intensity = Math.floor(255 * volume);
+    //     const color = `rgb(${intensity}, ${intensity}, ${intensity}` + `)`;
+    //     const strokeWidth = `${1 + (volume * 6)}`;
+    //     lines.push(
+    //       <line {...coords} strokeLinecap="round" stroke={color} strokeWidth={strokeWidth} key={key} />
+    //     );
+
+    //     prevPitchPixel = pitchPixel;
+    //   }
+
+      // index++;
+    // });
 
     return lines;
   }
@@ -112,6 +166,7 @@ export default class PitchPlot extends Component {
     const {notes} = this.props;
 
     const noteHeads = [];
+    const xOffset = this.calcXOffset();
     let index = 0;
 
     notes.forEach(note => {
@@ -119,7 +174,7 @@ export default class PitchPlot extends Component {
 
       const pitchPixel = this.flipY(this.scalePitchToPixelY(notePitch));
       const coord = {
-        cx: this.scaleTimeToPixelX(startTimeMsec),
+        cx: this.scaleTimeToPixelX(startTimeMsec) - xOffset,
         cy: pitchPixel
       };
       const key = 'note_head_' + index++;

@@ -7,7 +7,7 @@ const pitchDuration = 40;
 const startNote = 60;
 const numIndices = pitches * pitchDuration;
 
-export default function nextFakePitch() {
+export function nextFakePitch() {
   if (fakePitches.length === 0) {
     for (let idx = 0; idx < pitches; ++idx) {
       const pitch = Audio.noteToPitch(startNote + idx);
@@ -19,4 +19,9 @@ export default function nextFakePitch() {
 
   const wrappedIndex = fakePitchIndex++ % numIndices;
   return fakePitches[wrappedIndex];
+}
+
+let time = 0;
+export function nextFakeVolume() {
+  return 0.5 + (0.5 * Math.sin(time++ * 0.1));
 }
