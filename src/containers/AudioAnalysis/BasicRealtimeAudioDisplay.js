@@ -1,5 +1,5 @@
 import React, {PropTypes, Component} from 'react';
-import { AudioVolume, AudioPitch, MusicNotationPanel, PitchPlot, FpsReadout } from 'components';
+import { AudioVolume, AudioPitch, MusicNotationPanel, PitchPlotCanvas, FpsReadout } from 'components';
 import {connect} from 'react-redux';
 import {toggleAudioRecording, addNote} from 'redux/modules/audioRecorder';
 import {
@@ -233,7 +233,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
         <FpsReadout fps={fps} />
         <h3>Current pitch: {pitch} Hz</h3>
         <h3>Current volume: {totalVolume} dB</h3>
-        <PitchPlot pitches={pitches} notes={recordedNotes} />
+        <PitchPlotCanvas pitches={pitches} notes={recordedNotes} />
         {all}
       </div>
     );
