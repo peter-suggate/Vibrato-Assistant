@@ -39,7 +39,7 @@ export default class PitchPlot extends Component {
   }
 
   scaleTimeToPixelX(timeMsec) {
-    return timeMsec / 40.0;
+    return timeMsec / 10.0;
   }
 
   flipY(yPixel) {
@@ -55,8 +55,8 @@ export default class PitchPlot extends Component {
     let index = 0;
     let prevPitchPixel = 0;
     let curX = this.scaleTimeToPixelX(0);
-    pitches.forEach(pitchAndTime => {
-      const {pitch, timeMsec} = pitchAndTime;
+    pitches.forEach(pitchVolAndTime => {
+      const {pitch, volume, timeMsec} = pitchVolAndTime;
 
       if (pitch > 0) {
         const nextX = this.scaleTimeToPixelX(timeMsec);
@@ -69,15 +69,16 @@ export default class PitchPlot extends Component {
         };
         curX = nextX;
         const key = 'pitch_line_' + index;
-
+        const intensity = Math.floor(255 * volume);
+        const color = `rgb(${intensity}, ${intensity}, ${intensity}` + `)`;
         lines.push(
-          <line {...coords} stroke="blue" strokeWidth="1" key={key} />
+          <line {...coords} stroke={color} strokeWidth="2" key={key} />
         );
 
         prevPitchPixel = pitchPixel;
       }
 
-      curX++;
+      // curX++;
       index++;
     });
 

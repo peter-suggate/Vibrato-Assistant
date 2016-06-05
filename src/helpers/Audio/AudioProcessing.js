@@ -126,3 +126,17 @@ export function pitchToNoteName(pitch) {
 
   return note.noteName;
 }
+
+export function frequncyAmplitudesToVolume(frequencyAmplitudes) {
+  if (frequencyAmplitudes.length === 0) {
+    return 0;
+  }
+
+  let totalVolume = 0;
+
+  frequencyAmplitudes.forEach(amplitude => {
+    totalVolume += amplitude;
+  });
+
+  return totalVolume / frequencyAmplitudes.length;
+}

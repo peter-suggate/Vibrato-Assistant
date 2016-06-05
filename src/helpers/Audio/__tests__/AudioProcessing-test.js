@@ -4,7 +4,8 @@ import {
   pitchToNote,
   noteIndexConcertA,
   logOfDifferenceBetweenAdjacentSemitones,
-  round2dp
+  round2dp,
+  frequncyAmplitudesToVolume
 } from 'helpers/Audio/AudioProcessing';
 
 describe('noteToPitch', () => {
@@ -26,5 +27,18 @@ describe('logOfDifferenceBetweenAdjacentSemitones', () => {
     expect(octaveAboveConcertAPitch).to.equal(
       round2dp(Math.pow(2, Math.log2(concertAPitch) + (12 * logOfDifferenceBetweenAdjacentSemitones())))
       );
+  });
+});
+
+describe('frequncyAmplitudesToVolume', () => {
+  const numFrequencies = 128;
+  const frequencies = [];
+  for (let idx = 0; idx < numFrequencies; idx++) {
+    frequencies.push(idx + 0.5);
+  }
+
+  it('returns total volume from a range of frequncy amplitudes', () => {
+    const totalVolume = frequncyAmplitudesToVolume(frequencies);
+    expect(totalVolume).to.equal(numFrequencies / 2);
   });
 });

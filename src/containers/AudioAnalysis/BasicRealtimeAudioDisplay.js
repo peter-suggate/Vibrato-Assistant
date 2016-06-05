@@ -9,6 +9,7 @@ import {
   getLatestFrequencyData,
   getLatestPitch
 } from '../../helpers/Audio/AudioCapture';
+import { frequncyAmplitudesToVolume } from '../../helpers/Audio/AudioProcessing';
 import FixedPeriodNoteRecorder from '../../helpers/Audio/FixedPeriodNoteRecorder';
 import VariablePeriodNoteRecorder from '../../helpers/Audio/VariablePeriodNoteRecorder';
 import nextFakePitch from '../../helpers/Audio/TestHelpers';
@@ -116,7 +117,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
       pitches = [];
     }
 
-    const test = true;
+    const test = false;
     if (test) {
       pitch = nextFakePitch();
     }
@@ -134,8 +135,11 @@ export default class BasicRealtimeAudioDisplay extends Component {
       this.noteRecorder.start();
     }
 
-    const pitchAndTime = {pitch, timeMsec: this.noteRecorder.timeAfterStartMsec()};
-    pitches.push(pitchAndTime);
+    const frequencyAmplitudes = getLatestFrequencyData();
+    const totalVolume = frequncyAmplitudesToVolume(frequencyAmplitudes);
+
+    const pitchVolAndTime = {pitch, volume: totalVolume, timeMsec: this.noteRecorder.timeAfterStartMsec()};
+    pitches.push(pitchVolAndTime);
 
     const newNoteAdded = this.noteRecorder.addCurrentPitch(pitch);
     if (newNoteAdded) {
@@ -143,7 +147,6 @@ export default class BasicRealtimeAudioDisplay extends Component {
       this.addNoteAction(notePitch, startTimeMsec, durationMsec);
     }
 
-    const frequencyAmplitudes = getLatestFrequencyData();
     this.setState({ volumes: frequencyAmplitudes, pitch, pitches });
   }
 
@@ -168,6 +171,8 @@ export default class BasicRealtimeAudioDisplay extends Component {
     // const pitchMin = Math.log2(55);
     // const pitchMax = Math.log2(500);
     // const pitchMin = Math.log2(400);
+    const maxVolume = 50;
+    const totalVolume = frequncyAmplitudesToVolume(volumes) / maxVolume;
 
         // <PitchTimePlot values={pitches} valueMax={pitchMax} valueMin={pitchMin} />
     const showAll = false;
@@ -184,6 +189,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     const audioElements = (
       <div>
         <h3>Current pitch: {pitch} Hz</h3>
+        <h3>Current volume: {totalVolume} dB</h3>
         <PitchPlot pitches={pitches} notes={recordedNotes} />
         {all}
       </div>
