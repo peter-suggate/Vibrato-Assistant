@@ -1,5 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import {MIN_RECOGNISABLE_PITCH} from 'helpers/Audio/AudioProcessing';
+import PitchPlotScaling from 'helpers/Audio/PitchPlotScaling';
 
 export default class PitchPlot extends Component {
   static propTypes = {
@@ -10,8 +11,10 @@ export default class PitchPlot extends Component {
   constructor(props) {
     super(props);
 
-    this.logPitchMin = Math.log2(PitchPlot.attributes.pitchMin);
-    this.logPitchMax = Math.log2(PitchPlot.attributes.pitchMax);
+    this.pitchScaling = new PitchPlotScaling(
+      PitchPlot.attributes.pitchMin,
+      PitchPlot.attributes.pitchMax
+      );
   }
 
   componentDidMount() {
@@ -42,12 +45,12 @@ export default class PitchPlot extends Component {
 
   scalePitchToPixelY(pitch) {
     const {heightInPixels} = PitchPlot.attributes;
-    const {logPitchMin, logPitchMax} = this;
+    const {pitchScaling} = this;
     const logPitch = Math.log2(pitch);
 
     return this.linearInterpolate(
       logPitch,
-      logPitchMin, logPitchMax,
+      pitchScaling.logMin(), pitchScaling.logMax(),
       0, heightInPixels
     );
   }
@@ -77,6 +80,8 @@ export default class PitchPlot extends Component {
     context.save();
     context.fillStyle = '#00F';
 
+    this.pitchScaling.updateVerticalScaling(this.props.pitches);
+
     this.renderTrace(context);
 
     context.restore();
@@ -86,13 +91,10 @@ export default class PitchPlot extends Component {
     const {pitches} = this.props;
     const {heightInPixels} = PitchPlot.attributes;
 
-    // const lines = [];
-
     let index = 0;
     const numPitches = pitches.length;
     if (numPitches < 2) {
       return;
-      // return lines;
     }
 
     const xOffset = this.calcXOffset();
@@ -101,7 +103,6 @@ export default class PitchPlot extends Component {
     let prevX = xOffset + this.scaleTimeToPixelX(timeMsec);
     let prevY = this.flipY(this.scalePitchToPixelY(pitch));
 
-    // context.moveTo(prevX, prevY);
     context.lineCap = 'round';
 
     for (let idx = numPitches - 2; idx > 0; --idx) {
@@ -113,17 +114,8 @@ export default class PitchPlot extends Component {
       const curX = this.scaleTimeToPixelX(timeMsec) - xOffset;
       const curY = this.flipY(this.scalePitchToPixelY(pitch));
       if (pitch >= MIN_RECOGNISABLE_PITCH && curY <= heightInPixels && prevY <= heightInPixels) {
-        // const coords = {
-        //   x1: prevX,
-        //   y1: prevY,
-        //   x2: curX,
-        //   y2: curY
-        // };
-
-        // const key = 'pitch_line_' + index;
-        const intensity = Math.floor(255 * volume);
-        const color = `rgb(${intensity}, ${intensity}, ${intensity}` + `)`;
-        // const strokeWidth = `${0.5 + (volume * 5)}`;
+        const colorIntensity = Math.floor((0.2 * 255) + (0.8 * 255 * volume));
+        const color = `rgb(${colorIntensity}, ${colorIntensity}, ${colorIntensity}` + `)`;
         context.strokeStyle = color;
         context.lineWidth = 0.5 + (volume * 5);
 
@@ -131,9 +123,6 @@ export default class PitchPlot extends Component {
         context.moveTo(prevX, prevY);
         context.lineTo(curX, curY);
         context.stroke();
-        // lines.push(
-        //   <line {...coords} strokeLinecap="round" stroke={color} strokeWidth={strokeWidth} key={key} />
-        // );
 
         index++;
       }
@@ -141,8 +130,6 @@ export default class PitchPlot extends Component {
       prevY = curY;
       prevX = curX;
     }
-
-    // return lines;
   }
 
   render() {
