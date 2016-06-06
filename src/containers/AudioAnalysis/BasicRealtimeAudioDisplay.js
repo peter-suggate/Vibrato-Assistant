@@ -1,7 +1,7 @@
 import React, {PropTypes, Component} from 'react';
 import { AudioVolume, AudioPitch, MusicNotationPanel, PitchPlotCanvas, FpsReadout } from 'components';
 import {connect} from 'react-redux';
-import {toggleAudioRecording, addNote} from 'redux/modules/audioRecorder';
+import {toggleAudioRecording, addPitch, addNote} from 'redux/modules/audioRecorder';
 import {
   microphoneAvailable,
   beginAudioRecording,
@@ -21,6 +21,7 @@ const RECORD_NOTES = false;
 @connect(
   state => ({
     recordingAudio: state.audioRecorder.recording,
+    recordedPitches: state.audioRecorder.recordedPitches,
     recordedNotes: state.audioRecorder.recordedNotes
   })
   )
@@ -28,6 +29,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
   static propTypes = {
     recordingAudio: PropTypes.bool,
     recordedNotes: PropTypes.array,
+    recordedPitches: PropTypes.array,
     dispatch: PropTypes.func.isRequired
   }
 
@@ -38,6 +40,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
     this.updateLoop = this.updateLoop.bind(this);
     this.toggleRecordingAction = this.toggleRecordingAction.bind(this);
+    this.addPitchAction = this.addPitchAction.bind(this);
     this.addNoteAction = this.addNoteAction.bind(this);
     this.recentFps = [];
     this.lastRenderTime = null;
@@ -45,8 +48,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
   state = {
     volumes: [],
-    pitch: 0,
-    pitches: []
+    pitch: 0
   }
 
   componentDidMount() {
@@ -114,11 +116,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
   moreAudioRecorded() {
     let pitch = getLatestPitch();
-    const {pitches} = this.state;
-
-    // if (pitches.length >= 800) {
-    //   pitches = [];
-    // }
+    const {recordedPitches} = this.props;
 
     const test = false;
     if (test) {
@@ -147,8 +145,9 @@ export default class BasicRealtimeAudioDisplay extends Component {
       totalVolume /= 80;
     }
 
-    const pitchVolAndTime = {pitch, volume: totalVolume, timeMsec: this.noteRecorder.timeAfterStartMsec()};
-    pitches.push(pitchVolAndTime);
+    // const pitchVolAndTime = {pitch, volume: totalVolume, timeMsec: this.noteRecorder.timeAfterStartMsec()};
+    this.addPitchAction(pitch, totalVolume, this.noteRecorder.timeAfterStartMsec());
+    // pitches.push(pitchVolAndTime);
 
     if (RECORD_NOTES) {
       if (this.noteRecorder) {
@@ -160,7 +159,12 @@ export default class BasicRealtimeAudioDisplay extends Component {
       }
     }
 
-    this.setState({ volumes: frequencyAmplitudes, pitch, pitches });
+    this.setState({ volumes: frequencyAmplitudes, pitch, recordedPitches });
+  }
+
+  addPitchAction(pitch, volume, timeMsec) {
+    const {dispatch} = this.props;
+    dispatch(addPitch(pitch, volume, timeMsec));
   }
 
   addNoteAction(note, startTime, duration) {
@@ -201,8 +205,8 @@ export default class BasicRealtimeAudioDisplay extends Component {
   }
 
   render() {
-    const {volumes, pitch, pitches} = this.state;
-    const {recordingAudio, recordedNotes} = this.props;
+    const {volumes, pitch} = this.state;
+    const {recordingAudio, recordedPitches, recordedNotes} = this.props;
     const className = 'btn btn-default';
 
     this.updateFps();
@@ -233,7 +237,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
         <FpsReadout fps={fps} />
         <h3>Current pitch: {pitch} Hz</h3>
         <h3>Current volume: {totalVolume} dB</h3>
-        <PitchPlotCanvas pitches={pitches} notes={recordedNotes} />
+        <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} />
         {all}
       </div>
     );

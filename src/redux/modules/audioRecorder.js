@@ -1,8 +1,10 @@
 const TOGGLE_RECORDING_AUDIO = 'Vibrato/audioRecorder/TOGGLE_RECORDING_AUDIO';
 const ADD_NOTE = 'Vibrato/audioRecorder/ADD_NOTE';
+const ADD_PITCH = 'Vibrato/audioRecorder/ADD_PITCH';
 
 const initialState = {
   recording: false,
+  recordedPitches: [],
   recordedNotes: []
 };
 
@@ -13,6 +15,13 @@ export default function reducer(state = initialState, action = {}) {
       return {
         ...state,
         recording: !recording
+      };
+    case ADD_PITCH:
+      let {recordedPitches} = state;
+      recordedPitches = recordedPitches.concat(action.pitch);
+      return {
+        ...state,
+        recordedPitches
       };
     case ADD_NOTE:
       let {recordedNotes} = state;
@@ -29,6 +38,13 @@ export default function reducer(state = initialState, action = {}) {
 export function toggleAudioRecording() {
   return {
     type: TOGGLE_RECORDING_AUDIO
+  };
+}
+
+export function addPitch(pitch, volume, timeMsec) {
+  return {
+    type: ADD_PITCH,
+    pitch: {pitch, volume, timeMsec }
   };
 }
 
