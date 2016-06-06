@@ -189,8 +189,10 @@ export default class PitchPlotSVG extends Component {
     const staff = this.renderStaff();
     const notes = this.renderNotes();
 
+    const styles = require('./Graphs.scss');
+
     return (
-      <div>
+      <div className={styles.pitchPlotSVG}>
         <svg width={widthInPixels} height={heightInPixels}>
           {staff}
           {notes}

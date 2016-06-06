@@ -1,3 +1,10 @@
 .pitchPlotCanvas {
+  /* Allow the svg plot to overlay us. */
   position: absolute;
+}
+.pitchPlotSVG {
+  /* Provide a position otherwise z-index means nothing (w.r.t the canvas we're
+     pverlaying */
+  position: relative;
+  z-index: 1; /* Bring above the pitch plot canvas */
 }

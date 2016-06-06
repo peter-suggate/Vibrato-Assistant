@@ -57,10 +57,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     this.recentFps = [];
     this.lastRenderTime = null;
 
-    this.pitchScaling = new PitchPlotScaling(
-      220,
-      440
-      );
+    this.pitchScaling = new PitchPlotScaling(220, 440);
   }
 
   state = {
@@ -162,9 +159,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
       totalVolume /= 80;
     }
 
-    // const pitchVolAndTime = {pitch, volume: totalVolume, timeMsec: this.noteRecorder.timeAfterStartMsec()};
     this.addPitchAction(pitch, totalVolume, this.noteRecorder.timeAfterStartMsec());
-    // pitches.push(pitchVolAndTime);
 
     if (RECORD_NOTES) {
       if (this.noteRecorder) {
