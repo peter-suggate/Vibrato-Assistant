@@ -4,7 +4,7 @@ import {
 } from 'helpers/Audio/AudioProcessing';
 
 const NICE_SCALING_WINDOW_WIDTH_MS = 2000;
-const NICE_SCALING_PAD = 5 * logOfDifferenceBetweenAdjacentSemitones();
+const NICE_SCALING_PAD = 10 * logOfDifferenceBetweenAdjacentSemitones();
 const NICE_SCALING_INTERP_SPEED = 0.05;
 const NICE_SCALING_INTERP_SPEED_INV = 1 - NICE_SCALING_INTERP_SPEED;
 
@@ -29,6 +29,21 @@ export default class PitchPlotScaling {
 
     this.logPitchMin = NICE_SCALING_INTERP_SPEED_INV * this.logPitchMin + NICE_SCALING_INTERP_SPEED * this.nicePitchRange.min;
     this.logPitchMax = NICE_SCALING_INTERP_SPEED_INV * this.logPitchMax + NICE_SCALING_INTERP_SPEED * this.nicePitchRange.max;
+  }
+
+  linearInterpolate(val, fromMin, fromMax, toMin, toMax) {
+    const tmp = (val - fromMin) / (fromMax - fromMin);
+    return (tmp + toMin) * (toMax - toMin);
+  }
+
+  scale(pitch, containerHeightInPixels) {
+    const logPitch = Math.log2(pitch);
+
+    return this.linearInterpolate(
+      logPitch,
+      this.logMin(), this.logMax(),
+      0, containerHeightInPixels
+    );
   }
 
   _findPitchInRange(pitchesAndTimes, withinLastMs) {

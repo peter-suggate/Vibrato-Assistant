@@ -1,22 +1,34 @@
 import React, {PropTypes, Component} from 'react';
-import { AudioVolume, AudioPitch, MusicNotationPanel, PitchPlotCanvas, FpsReadout } from 'components';
+import {
+  AudioVolume,
+  AudioPitch,
+  MusicNotationPanel,
+  PitchPlotSVG,
+  PitchPlotCanvas,
+  FpsReadout
+} from 'components';
 import {connect} from 'react-redux';
-import {toggleAudioRecording, addPitch, addNote} from 'redux/modules/audioRecorder';
+import {
+  toggleAudioRecording,
+  addPitch,
+  addNote
+} from 'redux/modules/audioRecorder';
 import {
   microphoneAvailable,
   beginAudioRecording,
   stopAudioRecording,
   getLatestFrequencyData,
   getLatestPitch
-} from '../../helpers/Audio/AudioCapture';
-import { frequncyAmplitudesToVolume } from '../../helpers/Audio/AudioProcessing';
-import FixedPeriodNoteRecorder from '../../helpers/Audio/FixedPeriodNoteRecorder';
-import VariablePeriodNoteRecorder from '../../helpers/Audio/VariablePeriodNoteRecorder';
-import { nextFakePitch, nextFakeVolume } from '../../helpers/Audio/TestHelpers';
+} from 'helpers/Audio/AudioCapture';
+import { frequncyAmplitudesToVolume } from 'helpers/Audio/AudioProcessing';
+import FixedPeriodNoteRecorder from 'helpers/Audio/FixedPeriodNoteRecorder';
+import VariablePeriodNoteRecorder from 'helpers/Audio/VariablePeriodNoteRecorder';
+import { nextFakePitch, nextFakeVolume } from 'helpers/Audio/TestHelpers';
+import PitchPlotScaling from 'helpers/Audio/PitchPlotScaling';
 
 const useVariableNoteRecorder = true;
 const FPS_WINDOW_SIZE = 10;
-const RECORD_NOTES = false;
+const RECORD_NOTES = true;
 
 @connect(
   state => ({
@@ -44,6 +56,11 @@ export default class BasicRealtimeAudioDisplay extends Component {
     this.addNoteAction = this.addNoteAction.bind(this);
     this.recentFps = [];
     this.lastRenderTime = null;
+
+    this.pitchScaling = new PitchPlotScaling(
+      220,
+      440
+      );
   }
 
   state = {
@@ -205,22 +222,16 @@ export default class BasicRealtimeAudioDisplay extends Component {
   }
 
   render() {
+    const {pitchScaling} = this;
     const {volumes, pitch} = this.state;
     const {recordingAudio, recordedPitches, recordedNotes} = this.props;
     const className = 'btn btn-default';
 
     this.updateFps();
     const fps = this.currentFps();
-    // const pitchMax = 4020;
-    // const pitchMin = 55;
-    // const pitchMax = Math.log2(4020);
-    // const pitchMin = Math.log2(55);
-    // const pitchMax = Math.log2(500);
-    // const pitchMin = Math.log2(400);
     const maxVolume = 50;
     const totalVolume = frequncyAmplitudesToVolume(volumes) / maxVolume;
 
-        // <PitchTimePlot values={pitches} valueMax={pitchMax} valueMin={pitchMin} />
     const showAll = false;
     let all = null;
     if (showAll) {
@@ -237,7 +248,8 @@ export default class BasicRealtimeAudioDisplay extends Component {
         <FpsReadout fps={fps} />
         <h3>Current pitch: {pitch} Hz</h3>
         <h3>Current volume: {totalVolume} dB</h3>
-        <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} />
+        <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} pitchScaling={pitchScaling} />
+        <PitchPlotSVG pitches={recordedPitches} notes={recordedNotes} pitchScaling={pitchScaling} />
         {all}
       </div>
     );
