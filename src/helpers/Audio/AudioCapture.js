@@ -143,7 +143,7 @@ function gotStream(stream) {
   audioInput.connect(inputPoint);
 
   analyserNode = audioContext.createAnalyser();
-  analyserNode.fftSize = 2048;
+  analyserNode.fftSize = 128;
   inputPoint.connect(analyserNode);
 
   // audioRecorder = new Recorder(inputPoint);
@@ -211,7 +211,7 @@ export function getLatestFrequencyData() {
   // var SPACING = 3;
   // var BAR_WIDTH = 1;
   // var numBars = Math.round(canvasWidth / SPACING);
-  const numBars = 128;
+  const numBars = 64;
   const freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
 
   analyserNode.getByteFrequencyData(freqByteData);

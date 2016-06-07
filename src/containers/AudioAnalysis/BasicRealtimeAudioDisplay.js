@@ -156,7 +156,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
       totalVolume = nextFakeVolume();
     } else {
       totalVolume = frequncyAmplitudesToVolume(frequencyAmplitudes);
-      totalVolume /= 80;
+      totalVolume /= 20;
     }
 
     this.addPitchAction(pitch, totalVolume, this.noteRecorder.timeAfterStartMsec());
@@ -224,7 +224,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
     this.updateFps();
     const fps = this.currentFps();
-    const maxVolume = 50;
+    const maxVolume = 1;
     const totalVolume = frequncyAmplitudesToVolume(volumes) / maxVolume;
 
     const showAll = false;
@@ -238,13 +238,18 @@ export default class BasicRealtimeAudioDisplay extends Component {
         </div>
       );
     }
+    const showSVG = true;
+    let svgElem = null;
+    if (showSVG) {
+      svgElem = <PitchPlotSVG pitches={recordedPitches} notes={recordedNotes} pitchScaling={pitchScaling} />;
+    }
     const audioElements = (
       <div>
         <FpsReadout fps={fps} />
         <h3>Current pitch: {pitch} Hz</h3>
         <h3>Current volume: {totalVolume} dB</h3>
         <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} pitchScaling={pitchScaling} />
-        <PitchPlotSVG pitches={recordedPitches} notes={recordedNotes} pitchScaling={pitchScaling} />
+        {svgElem}
         {all}
       </div>
     );
