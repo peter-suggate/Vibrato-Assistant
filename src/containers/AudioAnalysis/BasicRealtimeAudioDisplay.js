@@ -156,7 +156,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
       totalVolume = nextFakeVolume();
     } else {
       totalVolume = frequncyAmplitudesToVolume(frequencyAmplitudes);
-      totalVolume /= 20;
+      totalVolume /= 200;
     }
 
     this.addPitchAction(pitch, totalVolume, this.noteRecorder.timeAfterStartMsec());

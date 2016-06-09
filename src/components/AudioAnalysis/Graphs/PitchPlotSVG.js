@@ -187,7 +187,7 @@ export default class PitchPlotSVG extends Component {
 
     // const trace = this.renderTrace();
     const staff = this.renderStaff();
-    const notes = this.renderNotes();
+    const notes = null;// this.renderNotes();
 
     const styles = require('./Graphs.scss');
 

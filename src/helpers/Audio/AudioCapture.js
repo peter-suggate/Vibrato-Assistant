@@ -143,7 +143,7 @@ function gotStream(stream) {
   audioInput.connect(inputPoint);
 
   analyserNode = audioContext.createAnalyser();
-  analyserNode.fftSize = 128;
+  analyserNode.fftSize = 256;
   inputPoint.connect(analyserNode);
 
   // audioRecorder = new Recorder(inputPoint);

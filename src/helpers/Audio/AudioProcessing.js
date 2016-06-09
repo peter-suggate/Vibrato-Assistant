@@ -137,8 +137,9 @@ export function frequncyAmplitudesToVolume(frequencyAmplitudes) {
   frequencyAmplitudes.forEach(amplitude => {
     // totalVolume += Math.pow(10, (amplitude / 10));
     if (amplitude > 0) {
-      const logAmp = Math.log(amplitude);
-      totalVolume += logAmp;
+      // const logAmp = Math.log(amplitude);
+      // totalVolume += logAmp;
+      totalVolume += amplitude;
     }
   });
 

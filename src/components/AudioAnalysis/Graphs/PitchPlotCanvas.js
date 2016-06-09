@@ -1,5 +1,10 @@
 import React, {Component, PropTypes} from 'react';
-import {MIN_RECOGNISABLE_PITCH} from 'helpers/Audio/AudioProcessing';
+import {
+  MIN_RECOGNISABLE_PITCH,
+  pitchToNoteNamePlusOffset
+} from 'helpers/Audio/AudioProcessing';
+
+const IN_TUNE_CENTS_TOLERANCE = 10;
 
 export default class PitchPlot extends Component {
   static propTypes = {
@@ -80,6 +85,7 @@ export default class PitchPlot extends Component {
     let prevY = this.flipY(pitchScaling.scale(pitch, heightInPixels));
 
     context.lineCap = 'round';
+    let numDrawnLines = 0;
 
     for (let idx = numPitches - 2; idx > 0; --idx) {
       const curPitch = pitches[idx];
@@ -90,8 +96,20 @@ export default class PitchPlot extends Component {
       const curX = this.scaleTimeToPixelX(timeMsec) - xOffset;
       const curY = this.flipY(pitchScaling.scale(pitch, heightInPixels));
       if (pitch >= MIN_RECOGNISABLE_PITCH && curY <= heightInPixels && prevY <= heightInPixels) {
+        const offsetCents = pitchToNoteNamePlusOffset(pitch).offset;
+        let red = 0.25;
+        let green = 0.25;
+        let blue = 0.25;
+        if (offsetCents < -IN_TUNE_CENTS_TOLERANCE) {
+          red = 1.0;
+        } else if (offsetCents > IN_TUNE_CENTS_TOLERANCE) {
+          blue = 1.0;
+        } else {
+          red = green = blue = 1.0;
+        }
+
         const colorIntensity = Math.floor((0.2 * 255) + (0.8 * 255 * volume));
-        const color = `rgb(${colorIntensity}, ${colorIntensity}, ${colorIntensity}` + `)`;
+        const color = `rgb(${colorIntensity * red}, ${colorIntensity * green}, ${colorIntensity * blue}` + `)`;
         context.strokeStyle = color;
         context.lineWidth = 0.5 + (volume * 5);
 
@@ -101,11 +119,18 @@ export default class PitchPlot extends Component {
         context.stroke();
 
         index++;
+        numDrawnLines++;
       }
 
       prevY = curY;
       prevX = curX;
+
+      if (curX < 0) {
+        break; // Finished drawing (from right to left).
+      }
     }
+
+    console.log(numDrawnLines);
   }
 
   render() {
