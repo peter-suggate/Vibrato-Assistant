@@ -1,10 +1,23 @@
-.pitchPlotCanvas {
+.pitchPlotCanvasContainer {
   /* Allow the svg plot to overlay us. */
   position: absolute;
+  width: 100%;
+  height: 100%;
 }
+
+.pitchPlotCanvas {
+}
+
 .pitchPlotSVG {
   /* Provide a position otherwise z-index means nothing (w.r.t the canvas we're
      pverlaying */
   position: relative;
   z-index: 1; /* Bring above the pitch plot canvas */
+  width: 100%;
+  height: 100%;
+}
+
+.pitchPlotSVG > svg {
+  width: 100%;
+  height: 100%;
 }

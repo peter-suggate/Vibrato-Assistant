@@ -11,8 +11,6 @@ export default class PitchPlot extends Component {
     pitches: PropTypes.array.isRequired,
     notes: PropTypes.array.isRequired,
     pitchScaling: PropTypes.object.isRequired,
-    width: PropTypes.number.isRequired,
-    height: PropTypes.number.isRequired,
     timeToPixelsRatio: PropTypes.number.isRequired
   }
 
@@ -22,19 +20,26 @@ export default class PitchPlot extends Component {
 
   componentDidMount() {
     const context = this.refs.canvas.getContext('2d');
+    this.resizeCanvasToFitContainer();
     this.paint(context);
   }
 
   componentDidUpdate() {
-    const {width, height} = this.props;
-
     const context = this.refs.canvas.getContext('2d');
-    context.clearRect(0, 0, width, height);
+    this.resizeCanvasToFitContainer();
     this.paint(context);
   }
 
   static attributes = {
     staffLineFrequencies: [329.63, 392.00, 493.88, 587.33, 698.46]
+  }
+
+  resizeCanvasToFitContainer() {
+    const {canvas, container} = this.refs;
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
+    // const context = canvas.getContext('2d');
+    // context.clearRect(0, 0, canvas.width, canvas.height);
   }
 
   scaleTimeToPixelX(timeMsec) {
@@ -44,12 +49,13 @@ export default class PitchPlot extends Component {
   }
 
   flipY(yPixel) {
-    const {height} = this.props;
+    const height = this.refs.canvas.clientHeight;
     return height - yPixel;
   }
 
   calcXOffset() {
-    const {pitches, width} = this.props;
+    const width = this.refs.canvas.clientWidth;
+    const {pitches} = this.props;
     const numPitches = pitches.length;
     if (numPitches === 0) {
       return 0;
@@ -71,7 +77,8 @@ export default class PitchPlot extends Component {
   }
 
   renderTrace(context) {
-    const {pitches, pitchScaling, height} = this.props;
+    const height = this.refs.canvas.clientHeight;
+    const {pitches, pitchScaling} = this.props;
 
     let index = 0;
     const numPitches = pitches.length;
@@ -150,10 +157,12 @@ export default class PitchPlot extends Component {
   }
 
   render() {
-    const {width, height} = this.props;
-
     const styles = require('./Graphs.scss');
 
-    return (<canvas className={styles.pitchPlotCanvas} width={width} height={height} ref="canvas" />);
+    return (
+      <div ref="container" className={styles.pitchPlotCanvasContainer}>
+        <canvas className={styles.pitchPlotCanvas} ref="canvas" />
+      </div>
+      );
   }
 }

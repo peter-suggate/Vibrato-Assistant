@@ -263,6 +263,8 @@ export default class BasicRealtimeAudioDisplay extends Component {
   }
 
   render() {
+    const styles = require('./AudioAnalysis.scss');
+
     const {mainPlotPitchScaling, miniPlotPitchScaling} = this;
     const {volumes, pitch} = this.state;
     const {recordingAudio, recordedPitches, recordedNotes} = this.props;
@@ -289,14 +291,21 @@ export default class BasicRealtimeAudioDisplay extends Component {
     if (showSVG) {
       svgElem = <PitchPlotSVG pitches={recordedPitches} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} />;
     }
+    const showMini = false;
+    let miniPlot = null;
+    if (showMini) {
+      miniPlot = <PitchPlotCanvas className={styles.pitchPlotMiniParentContainer} pitches={recordedPitches} notes={recordedNotes} pitchScaling={miniPlotPitchScaling} timeToPixelsRatio={0.5} />;
+    }
     const audioElements = (
       <div>
         <FpsReadout fps={fps} />
-        <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} width={800} height={400} timeToPixelsRatio={0.1} />
-        {svgElem}
+        <div className={styles.pitchPlotParentContainer}>
+          <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.1} />
+          {svgElem}
+          {miniPlot}
+        </div>
         <h3>Current pitch: {pitch} Hz</h3>
         <h3>Current volume: {totalVolume} dB</h3>
-        <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} pitchScaling={miniPlotPitchScaling} width={300} height={300} timeToPixelsRatio={0.5} />
         {all}
       </div>
     );

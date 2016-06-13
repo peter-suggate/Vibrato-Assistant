@@ -183,7 +183,7 @@ export default class PitchPlotSVG extends Component {
   }
 
   render() {
-    const {widthInPixels, heightInPixels} = PitchPlotSVG.attributes;
+    // const {widthInPixels, heightInPixels} = PitchPlotSVG.attributes;
 
     // const trace = this.renderTrace();
     const staff = this.renderStaff();
@@ -193,7 +193,7 @@ export default class PitchPlotSVG extends Component {
 
     return (
       <div className={styles.pitchPlotSVG}>
-        <svg width={widthInPixels} height={heightInPixels}>
+        <svg>
           {staff}
           {notes}
         </svg>
