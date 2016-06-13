@@ -48,8 +48,7 @@ export default class PitchPlot extends Component {
     return timeMsec * timeToPixelsRatio;
   }
 
-  flipY(yPixel) {
-    const height = this.refs.canvas.clientHeight;
+  flipY(yPixel, height) {
     return height - yPixel;
   }
 
@@ -90,7 +89,7 @@ export default class PitchPlot extends Component {
 
     let {pitch, offsetCents, volume, timeMsec} = pitches[numPitches - 1];
     let prevX = xOffset + this.scaleTimeToPixelX(timeMsec);
-    let prevY = this.flipY(pitchScaling.scale(pitch, height));
+    let prevY = this.flipY(pitchScaling.scale(pitch, height), height);
 
     let numDrawnLines = 0;
 
@@ -109,7 +108,7 @@ export default class PitchPlot extends Component {
       timeMsec = curPitch.timeMsec;
 
       const curX = this.scaleTimeToPixelX(timeMsec) - xOffset;
-      const curY = this.flipY(pitchScaling.scale(pitch, height));
+      const curY = this.flipY(pitchScaling.scale(pitch, height), height);
       if (pitch >= MIN_RECOGNISABLE_PITCH && curY <= height && prevY <= height) {
         // const offsetCents = pitchToNoteNamePlusOffset(pitch).offset;
         let red = 0.25;
