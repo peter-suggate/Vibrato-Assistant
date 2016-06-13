@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/server';
 import config from './config';
 import favicon from 'serve-favicon';
 import compression from 'compression';
-import httpProxy from 'http-proxy';
+// import httpProxy from 'http-proxy';
 import path from 'path';
 import createStore from './redux/create';
 // import ApiClient from './helpers/ApiClient';
@@ -27,6 +27,29 @@ const server = new http.Server(app);
 //   target: targetUrl,
 //   ws: true
 // });
+
+/* Note: using staging server url, remove .testing() for production
+Using .testing() will overwrite the debug flag with true */ 
+const LEX = require('letsencrypt-express').testing();
+
+const lex = LEX.create({
+  configDir: require('os').homedir() + '/letsencrypt/etc',
+  approveRegistration: function approve(hostname, cb) { // leave `null` to disable automatic registration
+    // Note: this is the place to check your database to get the user associated with this domain
+    cb(null, {
+      domains: [hostname],
+      email: 'petersuggate@gmail.com',
+      agreeTos: true
+    });
+  }
+});
+
+lex.onRequest = app;
+
+lex.listen([80], [443, 5001], function onRequest() {
+  const protocol = ('requestCert' in this) ? 'https' : 'http';
+  console.log('Listening at ' + protocol + '://localhost:' + this.address().port);
+});
 
 app.use(compression());
 app.use(favicon(path.join(__dirname, '..', 'static', 'favicon.ico')));

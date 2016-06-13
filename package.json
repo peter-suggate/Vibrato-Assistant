@@ -62,7 +62,7 @@
       "env": {
         "NODE_PATH": "./src",
         "NODE_ENV": "development",
-        "PORT": 3000,
+        "PORT": 5000,
         "APIPORT": 3030
       }
     },
@@ -80,7 +80,8 @@
         "UV_THREADPOOL_SIZE": 100,
         "NODE_PATH": "./src",
         "PORT": 3000,
-        "APIPORT": 3030
+        "APIPORT": 3030,
+        "HOST": "localhost.daplie.com"
       }
     },
     "build": {
@@ -91,6 +92,8 @@
     }
   },
   "dependencies": {
+    "async-task": "^0.4.2",
+    "async-tasks": "^1.0.8",
     "babel-core": "^6.5.2",
     "babel-loader": "^6.2.1",
     "babel-plugin-add-module-exports": "^0.1.2",
@@ -103,8 +106,10 @@
     "babel-preset-stage-0": "^6.3.13",
     "babel-register": "^6.3.13",
     "babel-runtime": "^6.3.19",
+    "background-worker": "^0.1.2",
     "body-parser": "^1.14.1",
     "compression": "^1.6.0",
+    "detect-node": "^2.0.3",
     "detect-pitch": "^1.1.0",
     "express": "^4.13.3",
     "express-session": "^1.12.1",
@@ -114,6 +119,7 @@
     "invariant": "^2.2.0",
     "less": "^2.5.3",
     "less-loader": "^2.2.1",
+    "letsencrypt-express": "^1.1.5",
     "lru-memoize": "^1.0.0",
     "map-props": "^1.0.0",
     "multireducer": "^2.0.0",
@@ -140,7 +146,8 @@
     "url-loader": "^0.5.7",
     "vexflow": "^1.2.45",
     "warning": "^2.1.0",
-    "webpack-isomorphic-tools": "^2.2.18"
+    "webpack-isomorphic-tools": "^2.2.18",
+    "worker-loader": "^0.7.0"
   },
   "devDependencies": {
     "autoprefixer-loader": "^3.1.0",

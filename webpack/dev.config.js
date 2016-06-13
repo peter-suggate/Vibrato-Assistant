@@ -6,7 +6,15 @@ var path = require('path');
 var webpack = require('webpack');
 var assetsPath = path.resolve(__dirname, '../static/dist');
 var host = (process.env.HOST || 'localhost');
-var port = (+process.env.PORT + 1) || 3001;
+var protocol = 'http';
+var httpPort = (+process.env.PORT + 1) || 3001;
+var httpsPort = 5001;
+var useHttps = true;
+var port = httpPort + 1;
+if (useHttps) {
+  port = httpsPort + 1;
+  protocol = 'https';
+}
 
 // https://github.com/halt-hammerzeit/webpack-isomorphic-tools
 var WebpackIsomorphicToolsPlugin = require('webpack-isomorphic-tools/plugin');
@@ -66,7 +74,7 @@ module.exports = {
   context: path.resolve(__dirname, '..'),
   entry: {
     'main': [
-      'webpack-hot-middleware/client?path=http://' + host + ':' + port + '/__webpack_hmr',
+      'webpack-hot-middleware/client?path=https://' + host + ':' + port + '/__webpack_hmr',
       'bootstrap-sass!./src/theme/bootstrap.config.js',
       'font-awesome-webpack!./src/theme/font-awesome.config.js',
       './src/client.js'
@@ -76,7 +84,7 @@ module.exports = {
     path: assetsPath,
     filename: '[name]-[hash].js',
     chunkFilename: '[name]-[chunkhash].js',
-    publicPath: 'http://' + host + ':' + port + '/dist/'
+    publicPath: protocol + '://' + host + ':' + port + '/dist/'
   },
   module: {
     loaders: [
