@@ -17,18 +17,27 @@ import {
   microphoneAvailable,
   beginAudioRecording,
   stopAudioRecording,
-  getLatestFrequencyData,
-  getLatestPitch
+  // getLatestFrequencyData,
+  // getLatestPitch,
+  registerOnPitchDataArrivedCallback
 } from 'helpers/Audio/AudioCapture';
-import { frequncyAmplitudesToVolume } from 'helpers/Audio/AudioProcessing';
+import {
+  frequncyAmplitudesToVolume,
+  logOfDifferenceBetweenAdjacentSemitones
+} from 'helpers/Audio/AudioProcessing';
 import FixedPeriodNoteRecorder from 'helpers/Audio/FixedPeriodNoteRecorder';
 import VariablePeriodNoteRecorder from 'helpers/Audio/VariablePeriodNoteRecorder';
-import { nextFakePitch, nextFakeVolume } from 'helpers/Audio/TestHelpers';
+// import { nextFakePitch, nextFakeVolume } from 'helpers/Audio/TestHelpers';
 import PitchPlotScaling from 'helpers/Audio/PitchPlotScaling';
 
 const useVariableNoteRecorder = true;
 const FPS_WINDOW_SIZE = 10;
-const RECORD_NOTES = true;
+// const RECORD_NOTES = true;
+
+const MAIN_PLOT_SCALING_WINDOW_WIDTH_MS = 2000;
+const MAIN_PLOT_SCALING_PAD = 10 * logOfDifferenceBetweenAdjacentSemitones();
+const MINI_PLOT_SCALING_WINDOW_WIDTH_MS = 1000;
+const MINI_PLOT_SCALING_PAD = 2 * logOfDifferenceBetweenAdjacentSemitones();
 
 @connect(
   state => ({
@@ -50,14 +59,18 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
     this.init();
 
-    this.updateLoop = this.updateLoop.bind(this);
+    // this.updateLoop = this.updateLoop.bind(this);
     this.toggleRecordingAction = this.toggleRecordingAction.bind(this);
     this.addPitchAction = this.addPitchAction.bind(this);
     this.addNoteAction = this.addNoteAction.bind(this);
+    this.onNewPitchRecorded = this.onNewPitchRecorded.bind(this);
+
+    this.changes = {};
     this.recentFps = [];
     this.lastRenderTime = null;
 
-    this.pitchScaling = new PitchPlotScaling(220, 440);
+    this.mainPlotPitchScaling = new PitchPlotScaling(220, 440, MAIN_PLOT_SCALING_WINDOW_WIDTH_MS, MAIN_PLOT_SCALING_PAD);
+    this.miniPlotPitchScaling = new PitchPlotScaling(220, 440, MINI_PLOT_SCALING_WINDOW_WIDTH_MS, MINI_PLOT_SCALING_PAD);
   }
 
   state = {
@@ -66,30 +79,61 @@ export default class BasicRealtimeAudioDisplay extends Component {
   }
 
   componentDidMount() {
-    this.startStopRecording();
+    this.toggleStartStopRecording();
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.changes = {};
+
+    if (nextProps.recordingAudio !== this.props.recordingAudio) {
+      this.changes.recordingAudio = true;
+    }
   }
 
   componentDidUpdate() {
-    if (this.animating !== this.props.recordingAudio) {
-      this.startStopRecording();
+    if (this.changes.recordingAudio) {
+      this.toggleStartStopRecording();
     }
+    // if (this.animating !== this.props.recordingAudio) {
+    // this.startStopRecording();
+    // }
   }
 
   componentWillUnmount() {
     this.stopRecording();
   }
 
-  startStopRecording() {
-    const {recordingAudio} = this.props;
-    const wasAnimating = this.animating;
-
-    if (wasAnimating !== recordingAudio) {
-      if (this.props.recordingAudio) {
-        this.startRecording();
+  onNewPitchRecorded(pitchAndOffsetCents) {
+    if (this.noteRecorder === null) {
+      if (useVariableNoteRecorder) {
+        this.noteRecorder = new VariablePeriodNoteRecorder(true);
       } else {
-        this.stopRecording();
+        this.noteRecorder = new FixedPeriodNoteRecorder(60);
       }
+      this.noteRecorder.start();
     }
+
+    const totalVolume = 1;
+    const {pitch, offsetCents} = pitchAndOffsetCents;
+    this.addPitchAction({
+      pitch,
+      offsetCents,
+      volume: totalVolume,
+      timeMsec: this.noteRecorder.timeAfterStartMsec()
+    });
+  }
+
+  toggleStartStopRecording() {
+    const {recordingAudio} = this.props;
+    // const wasAnimating = this.animating;
+
+    // if (wasAnimating !== recordingAudio) {
+    if (recordingAudio) {
+      this.startRecording();
+    } else {
+      this.stopRecording();
+    }
+    // }
   }
 
   init() {
@@ -105,78 +149,80 @@ export default class BasicRealtimeAudioDisplay extends Component {
       return (<div>Noes, we can't' record from your mic!</div>);
     }
 
-    beginAudioRecording(this.moreAudioRecorded.bind(this));
+    registerOnPitchDataArrivedCallback(this.onNewPitchRecorded);
+    // beginAudioRecording(this.moreAudioRecorded.bind(this));
+    beginAudioRecording();
 
-    this.animating = true;
+    // this.animating = true;
 
-    this.updateLoop();
+    // this.updateLoop();
   }
 
   stopRecording() {
-    this.animating = false;
+    // this.animating = false;
 
     stopAudioRecording();
   }
 
-  updateLoop() {
-    if (!this.animating) {
-      return;
-    }
+  // updateLoop() {
+  //   if (!this.animating) {
+  //     return;
+  //   }
 
-    this.rafID = window.requestAnimationFrame(this.updateLoop);
+  //   this.rafID = window.requestAnimationFrame(this.updateLoop);
 
-    this.moreAudioRecorded();
-  }
+  //   this.moreAudioRecorded();
+  // }
 
-  moreAudioRecorded() {
-    let pitch = getLatestPitch();
-    const {recordedPitches} = this.props;
+  // moreAudioRecorded() {
+  //   let pitch = getLatestPitch();
+  //   const {recordedPitches} = this.props;
 
-    const test = false;
-    if (test) {
-      pitch = nextFakePitch();
-    }
+  //   const test = false;
+  //   if (test) {
+  //     pitch = nextFakePitch();
+  //   }
 
-    if (pitch === null || !(pitch >= 0)) {
-      pitch = 0;
-    }
+  //   if (pitch === null || !(pitch >= 0)) {
+  //     pitch = 0;
+  //   }
 
-    if (this.noteRecorder === null) {
-      if (useVariableNoteRecorder) {
-        this.noteRecorder = new VariablePeriodNoteRecorder(true);
-      } else {
-        this.noteRecorder = new FixedPeriodNoteRecorder(60);
-      }
-      this.noteRecorder.start();
-    }
+  //   if (this.noteRecorder === null) {
+  //     if (useVariableNoteRecorder) {
+  //       this.noteRecorder = new VariablePeriodNoteRecorder(true);
+  //     } else {
+  //       this.noteRecorder = new FixedPeriodNoteRecorder(60);
+  //     }
+  //     this.noteRecorder.start();
+  //   }
 
-    const frequencyAmplitudes = getLatestFrequencyData();
-    let totalVolume = 0;
-    if (test) {
-      totalVolume = nextFakeVolume();
-    } else {
-      totalVolume = frequncyAmplitudesToVolume(frequencyAmplitudes);
-      totalVolume /= 200;
-    }
+  //   const frequencyAmplitudes = getLatestFrequencyData();
+  //   let totalVolume = 0;
+  //   if (test) {
+  //     totalVolume = nextFakeVolume();
+  //   } else {
+  //     totalVolume = frequncyAmplitudesToVolume(frequencyAmplitudes);
+  //     totalVolume /= 200;
+  //   }
 
-    this.addPitchAction(pitch, totalVolume, this.noteRecorder.timeAfterStartMsec());
+  //   this.addPitchAction(pitch, totalVolume, this.noteRecorder.timeAfterStartMsec());
 
-    if (RECORD_NOTES) {
-      if (this.noteRecorder) {
-        const newNoteAdded = this.noteRecorder.addCurrentPitch(pitch);
-        if (newNoteAdded) {
-          const {notePitch, startTimeMsec, durationMsec} = this.noteRecorder.getLatestNote();
-          this.addNoteAction(notePitch, startTimeMsec, durationMsec);
-        }
-      }
-    }
+  //   if (RECORD_NOTES) {
+  //     if (this.noteRecorder) {
+  //       const newNoteAdded = this.noteRecorder.addCurrentPitch(pitch);
+  //       if (newNoteAdded) {
+  //         const {notePitch, startTimeMsec, durationMsec} = this.noteRecorder.getLatestNote();
+  //         this.addNoteAction(notePitch, startTimeMsec, durationMsec);
+  //       }
+  //     }
+  //   }
 
-    this.setState({ volumes: frequencyAmplitudes, pitch, recordedPitches });
-  }
+  //   this.setState({ volumes: frequencyAmplitudes, pitch, recordedPitches });
+  // }
 
-  addPitchAction(pitch, volume, timeMsec) {
+  addPitchAction(actionData) {
     const {dispatch} = this.props;
-    dispatch(addPitch(pitch, volume, timeMsec));
+    dispatch(addPitch(actionData));
   }
 
   addNoteAction(note, startTime, duration) {
@@ -217,7 +263,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
   }
 
   render() {
-    const {pitchScaling} = this;
+    const {mainPlotPitchScaling, miniPlotPitchScaling} = this;
     const {volumes, pitch} = this.state;
     const {recordingAudio, recordedPitches, recordedNotes} = this.props;
     const className = 'btn btn-default';
@@ -241,15 +287,16 @@ export default class BasicRealtimeAudioDisplay extends Component {
     const showSVG = true;
     let svgElem = null;
     if (showSVG) {
-      svgElem = <PitchPlotSVG pitches={recordedPitches} notes={recordedNotes} pitchScaling={pitchScaling} />;
+      svgElem = <PitchPlotSVG pitches={recordedPitches} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} />;
     }
     const audioElements = (
       <div>
         <FpsReadout fps={fps} />
+        <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} width={800} height={400} timeToPixelsRatio={0.1} />
+        {svgElem}
         <h3>Current pitch: {pitch} Hz</h3>
         <h3>Current volume: {totalVolume} dB</h3>
-        <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} pitchScaling={pitchScaling} />
-        {svgElem}
+        <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} pitchScaling={miniPlotPitchScaling} width={300} height={300} timeToPixelsRatio={0.5} />
         {all}
       </div>
     );

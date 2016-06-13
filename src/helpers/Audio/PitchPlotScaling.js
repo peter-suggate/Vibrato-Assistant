@@ -1,17 +1,16 @@
 import {
-  MIN_RECOGNISABLE_PITCH,
-  logOfDifferenceBetweenAdjacentSemitones
+  MIN_RECOGNISABLE_PITCH
 } from 'helpers/Audio/AudioProcessing';
 
-const NICE_SCALING_WINDOW_WIDTH_MS = 2000;
-const NICE_SCALING_PAD = 10 * logOfDifferenceBetweenAdjacentSemitones();
 const NICE_SCALING_INTERP_SPEED = 0.05;
 const NICE_SCALING_INTERP_SPEED_INV = 1 - NICE_SCALING_INTERP_SPEED;
 
 export default class PitchPlotScaling {
-  constructor(initialMin, initialMax) {
+  constructor(initialMin, initialMax, windowWidthMs, scalingPadFreq) {
     this.logPitchMin = Math.log2(initialMin);
     this.logPitchMax = Math.log2(initialMax);
+    this.windowWidthMs = windowWidthMs;
+    this.scalingPadFreq = scalingPadFreq;
 
     this.nicePitchRange = { min: this.logPitchMin, max: this.logPitchMax };
   }
@@ -79,19 +78,20 @@ export default class PitchPlotScaling {
   }
 
   _updateNiceVerticalScaling(pitchesAndTimes) {
-    const newPitchRange = this._findPitchInRange(pitchesAndTimes, NICE_SCALING_WINDOW_WIDTH_MS);
+    const {windowWidthMs, scalingPadFreq} = this;
+    const newPitchRange = this._findPitchInRange(pitchesAndTimes, windowWidthMs);
     if (newPitchRange !== null) {
       // Pad the range a bit.
-      newPitchRange.min -= NICE_SCALING_PAD;
-      newPitchRange.max += NICE_SCALING_PAD;
+      newPitchRange.min -= scalingPadFreq;
+      newPitchRange.max += scalingPadFreq;
 
       // To ensure a more stable animation, be slightly reluctant to zoom index unless the
       // difference gets too large.
-      if (newPitchRange.min < this.nicePitchRange.min || newPitchRange.min > this.nicePitchRange.min + NICE_SCALING_PAD) {
+      if (newPitchRange.min < this.nicePitchRange.min || newPitchRange.min > this.nicePitchRange.min + scalingPadFreq) {
         this.nicePitchRange.min = newPitchRange.min;
       }
 
-      if (newPitchRange.max > this.nicePitchRange.max || newPitchRange.max < this.nicePitchRange.max - NICE_SCALING_PAD) {
+      if (newPitchRange.max > this.nicePitchRange.max || newPitchRange.max < this.nicePitchRange.max - scalingPadFreq) {
         this.nicePitchRange.max = newPitchRange.max;
       }
     }

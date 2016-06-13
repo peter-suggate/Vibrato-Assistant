@@ -1,10 +1,36 @@
-import detectPitchMPM from './detectPitch';
-import detectPitch from 'detect-pitch';
+// import detectPitchMPM from './detectPitch';
+// import detectPitch from 'detect-pitch';
+import {
+  AUDIO_PROCESSOR_INIT_MESSAGE,
+  AUDIO_PROCESSOR_ADD_DATA_MESSAGE,
+  AUDIO_PROCESSOR_RETURN_LATEST_PITCH_DATA_MESSAGE
+} from './AudioProcessorWorker/Consts';
+
+const isNode = require('detect-node');
+
+let Worker = null;
+if (!isNode) {
+  Worker = require('worker?inline!helpers/Audio/AudioProcessorWorker/Worker');
+}
+
+// import AudioProcessorWorker from './AudioProcessorWorker/Worker';
+
+// import AsyncTask from 'async-task';
+// import BackgroundWorker from 'background-worker';
 
 function hasGetUserMedia() {
   return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
     navigator.mozGetUserMedia || navigator.msGetUserMedia);
 }
+
+// main.js
+// const AudioProcessorWorker = require('worker!./AudioProcessorWorker/Worker');
+
+// var worker = new MyWorker();
+// worker.postMessage({a: 1});
+// worker.onmessage = function(event) {...};
+// worker.addEventListener("message", function(event) {...});
+
 
 let firstAudioDataReceived = false;
 let audioContext = null;
@@ -12,18 +38,26 @@ let audioInput = null;
 let realAudioInput = null;
 let inputPoint = null;
 let analyserNode = null;
-let timeDomainDataArray = null;
-let latestPitch = 0;
-const medianFilter = [];
-const MEDIAN_FILTER_LENGTH = 9;
-const useMPM = true;
+// let timeDomainDataArray = null;
+// let latestPitch = 0;
+let scriptNode = null;
+// let audioProcessor = null;
+let audioProcessorWorker = null;
+// let audioProcessorTask = null;
+let onPitchDataArrivedCallback = null;
+// let lastReturnedPitchIndex = 0;
+// const pitches = [];
+// const medianFilter = [];
+// const MEDIAN_FILTER_LENGTH = 9;
+const FFT_SIZE = 256;
+const SCRIPT_PROCESSOR_SAMPLES_SIZE = 4 * FFT_SIZE;
+
+// const useMPM = true;
+// let unprocessedRecordedData = [];
 
 function initAudioContext() {
   if (typeof AudioContext !== `undefined`) {
     audioContext = new AudioContext();
-    // }
-    // else if (typeof webkitAudioContext !== `undefined`) {
-    // context = new webkitAudioContext();
   } else {
     throw new Error(`AudioContext not supported. :(`);
   }
@@ -61,6 +95,10 @@ function initAudioContext() {
 //     }
 // }
 
+export function registerOnPitchDataArrivedCallback(callback) {
+  onPitchDataArrivedCallback = callback;
+}
+
 function convertToMono(input) {
   const splitter = audioContext.createChannelSplitter(2);
   const merger = audioContext.createChannelMerger(2);
@@ -71,65 +109,41 @@ function convertToMono(input) {
   return merger;
 }
 
-// function updateAnalysers(time) {
-//   if (!analyserContext) {
-//     var canvas = document.getElementById(`analyser`);
-//     canvasWidth = canvas.width;
-//     canvasHeight = canvas.height;
-//     analyserContext = canvas.getContext('2d');
-//   }
+function createScriptNode() {
+  scriptNode = audioContext.createScriptProcessor(SCRIPT_PROCESSOR_SAMPLES_SIZE, 1, 1);
+  scriptNode.onaudioprocess = function onAudioProcess(audioProcessingEvent) {
+    // The input buffer is the song we loaded earlier
+    const inputBuffer = audioProcessingEvent.inputBuffer;
+    const inputData = inputBuffer.getChannelData(0);
 
-//   // analyzer draw code here
-//   {
-//     var SPACING = 3;
-//     var BAR_WIDTH = 1;
-//     var numBars = Math.round(canvasWidth / SPACING);
-//     var freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
+    // audioProcessorWorker.run('processAudioData', [inputData]).then((resultPitch) => {
+    //   if (onPitchDataArrivedCallback) {
+    //     onPitchDataArrivedCallback(resultPitch);
+    //   }
+    // });
+    audioProcessorWorker.postMessage({
+      messageId: AUDIO_PROCESSOR_ADD_DATA_MESSAGE,
+      audioData: inputData}
+      );
 
-//     analyserNode.getByteFrequencyData(freqByteData);
+    // // // The output buffer contains the samples that will be modified and played
+    // // var outputBuffer = audioProcessingEvent.outputBuffer;
 
-//     analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
-//     analyserContext.fillStyle = '#F6D565';
-//     analyserContext.lineCap = 'round';
-//     var multiplier = analyserNode.frequencyBinCount / numBars;
+    // // Loop through the output channels (in this case there is only one)
+    // for (var channel = 0; channel < outputBuffer.numberOfChannels; channel++) {
+    //   var outputData = outputBuffer.getChannelData(channel);
 
-//     // Draw rectangle for each frequency bin.
-//     for (var i = 0; i < numBars; ++i) {
-//       var magnitude = 0;
-//       var offset = Math.floor(i * multiplier);
-//       // gotta sum/average the block, or we miss narrow-bandwidth spikes
-//       for (var j = 0; j < multiplier; j++)
-//         magnitude += freqByteData[offset + j];
-//       magnitude = magnitude / multiplier;
-//       var magnitude2 = freqByteData[i * multiplier];
-//       analyserContext.fillStyle = `hsl( ` + Math.round((i * 360) / numBars) + `, 100%, 50%)`;
-//       analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
-//     }
-//   }
+    //   // Loop through the 4096 samples
+    //   for (var sample = 0; sample < inputBuffer.length; sample++) {
+    //     // make output equal to the same as the input
+    //     outputData[sample] = inputData[sample];
 
-//   rafID = window.requestAnimationFrame(updateAnalysers);
-// }
-
-// function toggleMono() {
-//     if (audioInput != realAudioInput) {
-//         audioInput.disconnect();
-//         realAudioInput.disconnect();
-//         audioInput = realAudioInput;
-//     } else {
-//         realAudioInput.disconnect();
-//         audioInput = convertToMono( realAudioInput );
-//     }
-
-//     audioInput.connect(inputPoint);
-// }
-
-// function updateLoop() {
-//   if (updateCallbackFunc) {
-//     updateCallbackFunc();
-//   }
-
-//   rafID = window.requestAnimationFrame(updateLoop);
-// }
+    //     // add noise to each output sample
+    //     outputData[sample] += ((Math.random() * 2) - 1) * 0.2;
+    //   }
+    // }
+  };
+}
 
 function gotStream(stream) {
   inputPoint = audioContext.createGain();
@@ -143,8 +157,11 @@ function gotStream(stream) {
   audioInput.connect(inputPoint);
 
   analyserNode = audioContext.createAnalyser();
-  analyserNode.fftSize = 256;
+  analyserNode.fftSize = FFT_SIZE;
   inputPoint.connect(analyserNode);
+
+  createScriptNode();
+  audioInput.connect(scriptNode);
 
   // audioRecorder = new Recorder(inputPoint);
 
@@ -152,7 +169,66 @@ function gotStream(stream) {
   // zeroGain.gain.value = 0.0;
   // inputPoint.connect(zeroGain);
   // zeroGain.connect(audioContext.destination);
-  audioInput.connect(audioContext.destination);
+  scriptNode.connect(audioContext.destination);
+
+  // audioProcessor = new AudioProcessorWorker(audioContext.sampleRate);// new Worker('AudioProcessorWorker.js');
+  audioProcessorWorker = new Worker;
+  // audioProcessorWorker = new BackgroundWorker({workerData: audioProcessor});
+  // audioProcessorWorker.define('processAudioData', (args) => {
+  //   importScripts('./detectPitch');
+  //   // console.log(workerData, args);
+  //   // const theAudioProcessor = workerData;
+  //   const audioSamples = args[0];
+  //   const audioSampleRate = args[1];
+
+  //   const pitch = detectPitchMPM(audioSamples, audioSampleRate);
+
+  //   // audioProcessor.addAudioData(audioSamples);
+  //   // onPitchDataArrivedCallback(audioProcessor.getLatestPitches(lastReturnedPitchIndex));
+  //   // lastReturnedPitchIndex = audioProcessor.getNumberOfPitches();
+  //   return pitch;
+  // });
+  // audioProcessorTask = new AsyncTask({
+  //   doInBackground: () => {
+  //     for (let asd = 1; asd < 2000; ++asd) {
+  //       console.log('Waiting for audio to be recorded asynchronously');
+  //     }
+  //     for (;;) {
+  //       console.log('Waiting for audio to be recorded asynchronously');
+  //       if (unprocessedRecordedData.length > 0) {
+  //         audioProcessorWorker.addAudioData(unprocessedRecordedData);
+  //         unprocessedRecordedData = [];
+  //         console.log('Adding data asynchronously');
+  //         onPitchDataArrivedCallback(audioProcessorWorker.getLatestPitches(lastReturnedPitchIndex));
+  //         lastReturnedPitchIndex = audioProcessorWorker.getNumberOfPitches();
+  //       }
+  //     }
+  //   }
+  // });
+
+  // audioProcessorTask.execute();
+
+  audioProcessorWorker.postMessage({
+    messageId: AUDIO_PROCESSOR_INIT_MESSAGE,
+    sampleRate: audioContext.sampleRate}
+    );
+
+  audioProcessorWorker.addEventListener('message', function onMessage(messageEvent) {
+    const {data} = messageEvent;
+    const {messageId} = data;
+    switch (messageId) {
+      case AUDIO_PROCESSOR_RETURN_LATEST_PITCH_DATA_MESSAGE:
+        // pitches.push(data.pitchData);
+        if (onPitchDataArrivedCallback) {
+          onPitchDataArrivedCallback(data.pitchAndOffsetCents);
+        }
+        break;
+      default:
+        throw Error(`Unhandled message sent from AudioProcessorWorker: ${messageId}`);
+    }
+
+    // console.log('Worker said: ', messageEvent.data);
+  }, false);
 
   firstAudioDataReceived = true;
 }
@@ -169,6 +245,7 @@ export function microphoneAvailable() {
 
 export function beginAudioRecording() {
   if (audioContext !== null) {
+    audioContext.resume();
     return;
   }
 
@@ -200,6 +277,9 @@ export function beginAudioRecording() {
 export function stopAudioRecording() {
   // window.cancelAnimationFrame(rafID);
   // rafID = null;
+  if (audioContext) {
+    audioContext.suspend();
+  }
 }
 
 export function getLatestFrequencyData() {
@@ -241,38 +321,38 @@ export function getLatestFrequencyData() {
   return magnitudes;
 }
 
-export function getLatestPitch() {
-  if (!firstAudioDataReceived) {
-    return null;
-  }
+// export function getLatestPitch() {
+//   if (!firstAudioDataReceived) {
+//     return null;
+//   }
 
-  const numSamples = analyserNode.fftSize;
-  if (timeDomainDataArray === null) {
-    timeDomainDataArray = new Float32Array(numSamples);
-  }
-  analyserNode.getFloatTimeDomainData(timeDomainDataArray);
+//   const numSamples = analyserNode.fftSize;
+//   if (timeDomainDataArray === null) {
+//     timeDomainDataArray = new Float32Array(numSamples);
+//   }
+//   analyserNode.getFloatTimeDomainData(timeDomainDataArray);
 
-  if (useMPM) {
-    latestPitch = detectPitchMPM(timeDomainDataArray, audioContext.sampleRate);
-  } else {
-    const latestPeriod = detectPitch(timeDomainDataArray);
-    if (latestPeriod > 0) {
-      latestPitch = audioContext.sampleRate / latestPeriod;
-    } else {
-      latestPitch = 0;
-    }
-  }
+//   if (useMPM) {
+//     latestPitch = detectPitchMPM(timeDomainDataArray, audioContext.sampleRate);
+//   } else {
+//     const latestPeriod = detectPitch(timeDomainDataArray);
+//     if (latestPeriod > 0) {
+//       latestPitch = audioContext.sampleRate / latestPeriod;
+//     } else {
+//       latestPitch = 0;
+//     }
+//   }
 
-  medianFilter.push(latestPitch);
-  if (medianFilter.length > MEDIAN_FILTER_LENGTH) {
-    medianFilter.shift();
-  }
-  const sortedFilter = medianFilter.slice(0);
-  sortedFilter.sort((vala, valb) => {
-    return vala - valb;
-  });
-  const medianLength = sortedFilter.length;
-  return sortedFilter[Math.floor(medianLength / 2)];
+//   medianFilter.push(latestPitch);
+//   if (medianFilter.length > MEDIAN_FILTER_LENGTH) {
+//     medianFilter.shift();
+//   }
+//   const sortedFilter = medianFilter.slice(0);
+//   sortedFilter.sort((vala, valb) => {
+//     return vala - valb;
+//   });
+//   const medianLength = sortedFilter.length;
+//   return sortedFilter[Math.floor(medianLength / 2)];
 
-  // return latestPitch;
-}
+//   // return latestPitch;
+// }

@@ -41,10 +41,10 @@ export function toggleAudioRecording() {
   };
 }
 
-export function addPitch(pitch, volume, timeMsec) {
+export function addPitch(pitchData) {
   return {
     type: ADD_PITCH,
-    pitch: {pitch, volume, timeMsec }
+    pitch: pitchData
   };
 }
 
