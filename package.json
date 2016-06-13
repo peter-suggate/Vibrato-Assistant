@@ -1,26 +1,20 @@
 {
   "name": "react-redux-universal-hot-example",
-  "description": "Example of an isomorphic (universal) webapp using react redux and hot reloading",
-  "author": "Erik Rasmussen <rasmussenerik@gmail.com> (http://github.com/erikras)",
+  "description": "Music analysis practise tool",
+  "author": "Peter Suggate <petersuggate@gmail.com>",
   "license": "MIT",
-  "version": "0.9.0",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/erikras/react-redux-universal-hot-example"
+    "url": "https://github.com/peter-suggate/Vibrato-Assistant"
   },
-  "homepage": "https://github.com/erikras/react-redux-universal-hot-example",
+  "homepage": "https://github.com/peter-suggate/Vibrato-Assistant",
   "keywords": [
-    "react",
-    "isomorphic",
-    "universal",
-    "webpack",
-    "express",
-    "hot reloading",
-    "react-hot-reloader",
-    "redux",
-    "starter",
-    "boilerplate",
-    "babel"
+    "violin",
+    "music",
+    "analysis",
+    "practise",
+    "react"
   ],
   "main": "bin/server.js",
   "scripts": {
@@ -92,8 +86,6 @@
     }
   },
   "dependencies": {
-    "async-task": "^0.4.2",
-    "async-tasks": "^1.0.8",
     "babel-core": "^6.5.2",
     "babel-loader": "^6.2.1",
     "babel-plugin-add-module-exports": "^0.1.2",
@@ -106,7 +98,6 @@
     "babel-preset-stage-0": "^6.3.13",
     "babel-register": "^6.3.13",
     "babel-runtime": "^6.3.19",
-    "background-worker": "^0.1.2",
     "body-parser": "^1.14.1",
     "compression": "^1.6.0",
     "detect-node": "^2.0.3",
