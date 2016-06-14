@@ -272,13 +272,10 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
     this.updateFps();
     const fps = this.currentFps();
-    const maxVolume = 1;
     let totalVolume = 0;
     if (recordedPitches.length > 0) {
       totalVolume = recordedPitches[recordedPitches.length - 1].volume;
     }
-    totalVolume /= maxVolume;
-    // const totalVolume = frequncyAmplitudesToVolume(volumes) / maxVolume;
 
     mainPlotPitchScaling.updateVerticalScaling(recordedPitches);
 
