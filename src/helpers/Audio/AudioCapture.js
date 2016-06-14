@@ -32,7 +32,7 @@ function hasGetUserMedia() {
 // worker.addEventListener("message", function(event) {...});
 
 
-let firstAudioDataReceived = false;
+// let firstAudioDataReceived = false;
 let audioContext = null;
 let audioInput = null;
 let realAudioInput = null;
@@ -145,6 +145,36 @@ function createScriptNode() {
   };
 }
 
+// export function calculateVolume() {
+//   if (!firstAudioDataReceived) {
+//     return [];
+//   }
+
+//   const numBars = 1;
+//   const freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
+
+//   analyserNode.getByteFrequencyData(freqByteData);
+//   const multiplier = analyserNode.frequencyBinCount / numBars;
+//   let volumeAccum = 0;
+//   // const magnitudes = [];
+
+//   // Draw rectangle for each frequency bin.
+//   for (let bar = 0; bar < numBars; ++bar) {
+//     let magnitude = 0;
+//     const offset = Math.floor(bar * multiplier);
+//     // gotta sum/average the block, or we miss narrow-bandwidth spikes
+//     for (let mult = 0; mult < multiplier; mult++) {
+//       magnitude += freqByteData[offset + mult];
+//     }
+//     magnitude = magnitude / multiplier;
+//     const magnitude2 = freqByteData[bar * multiplier];
+//     volumeAccum += magnitude2;
+//     // magnitudes.push(magnitude2);
+//   }
+
+//   return volumeAccum;// Math.pow(2, volumeAccum * 0.001);
+// }
+
 function gotStream(stream) {
   inputPoint = audioContext.createGain();
 
@@ -163,50 +193,9 @@ function gotStream(stream) {
   createScriptNode();
   audioInput.connect(scriptNode);
 
-  // audioRecorder = new Recorder(inputPoint);
-
-  // const zeroGain = audioContext.createGain();
-  // zeroGain.gain.value = 0.0;
-  // inputPoint.connect(zeroGain);
-  // zeroGain.connect(audioContext.destination);
   scriptNode.connect(audioContext.destination);
 
-  // audioProcessor = new AudioProcessorWorker(audioContext.sampleRate);// new Worker('AudioProcessorWorker.js');
   audioProcessorWorker = new Worker;
-  // audioProcessorWorker = new BackgroundWorker({workerData: audioProcessor});
-  // audioProcessorWorker.define('processAudioData', (args) => {
-  //   importScripts('./detectPitch');
-  //   // console.log(workerData, args);
-  //   // const theAudioProcessor = workerData;
-  //   const audioSamples = args[0];
-  //   const audioSampleRate = args[1];
-
-  //   const pitch = detectPitchMPM(audioSamples, audioSampleRate);
-
-  //   // audioProcessor.addAudioData(audioSamples);
-  //   // onPitchDataArrivedCallback(audioProcessor.getLatestPitches(lastReturnedPitchIndex));
-  //   // lastReturnedPitchIndex = audioProcessor.getNumberOfPitches();
-  //   return pitch;
-  // });
-  // audioProcessorTask = new AsyncTask({
-  //   doInBackground: () => {
-  //     for (let asd = 1; asd < 2000; ++asd) {
-  //       console.log('Waiting for audio to be recorded asynchronously');
-  //     }
-  //     for (;;) {
-  //       console.log('Waiting for audio to be recorded asynchronously');
-  //       if (unprocessedRecordedData.length > 0) {
-  //         audioProcessorWorker.addAudioData(unprocessedRecordedData);
-  //         unprocessedRecordedData = [];
-  //         console.log('Adding data asynchronously');
-  //         onPitchDataArrivedCallback(audioProcessorWorker.getLatestPitches(lastReturnedPitchIndex));
-  //         lastReturnedPitchIndex = audioProcessorWorker.getNumberOfPitches();
-  //       }
-  //     }
-  //   }
-  // });
-
-  // audioProcessorTask.execute();
 
   audioProcessorWorker.postMessage({
     messageId: AUDIO_PROCESSOR_INIT_MESSAGE,
@@ -218,19 +207,16 @@ function gotStream(stream) {
     const {messageId} = data;
     switch (messageId) {
       case AUDIO_PROCESSOR_RETURN_LATEST_PITCH_DATA_MESSAGE:
-        // pitches.push(data.pitchData);
         if (onPitchDataArrivedCallback) {
-          onPitchDataArrivedCallback(data.pitchAndOffsetCents);
+          onPitchDataArrivedCallback(data.pitchAndOffsetCents, data.volume);
         }
         break;
       default:
         throw Error(`Unhandled message sent from AudioProcessorWorker: ${messageId}`);
     }
-
-    // console.log('Worker said: ', messageEvent.data);
   }, false);
 
-  firstAudioDataReceived = true;
+  // firstAudioDataReceived = true;
 }
 
 export function microphoneAvailable() {
@@ -282,44 +268,44 @@ export function stopAudioRecording() {
   }
 }
 
-export function getLatestFrequencyData() {
-  if (!firstAudioDataReceived) {
-    return [];
-  }
+// export function getLatestFrequencyData() {
+//   if (!firstAudioDataReceived) {
+//     return [];
+//   }
 
-  // analyzer draw code here
-  // var SPACING = 3;
-  // var BAR_WIDTH = 1;
-  // var numBars = Math.round(canvasWidth / SPACING);
-  const numBars = 64;
-  const freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
+//   // analyzer draw code here
+//   // var SPACING = 3;
+//   // var BAR_WIDTH = 1;
+//   // var numBars = Math.round(canvasWidth / SPACING);
+//   const numBars = 64;
+//   const freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
 
-  analyserNode.getByteFrequencyData(freqByteData);
+//   analyserNode.getByteFrequencyData(freqByteData);
 
-  // analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
-  // analyserContext.fillStyle = '#F6D565';
-  // analyserContext.lineCap = 'round';
-  const multiplier = analyserNode.frequencyBinCount / numBars;
+//   // analyserContext.clearRect(0, 0, canvasWidth, canvasHeight);
+//   // analyserContext.fillStyle = '#F6D565';
+//   // analyserContext.lineCap = 'round';
+//   const multiplier = analyserNode.frequencyBinCount / numBars;
 
-  const magnitudes = [];
+//   const magnitudes = [];
 
-  // Draw rectangle for each frequency bin.
-  for (let bar = 0; bar < numBars; ++bar) {
-    let magnitude = 0;
-    const offset = Math.floor(bar * multiplier);
-    // gotta sum/average the block, or we miss narrow-bandwidth spikes
-    for (let mult = 0; mult < multiplier; mult++) {
-      magnitude += freqByteData[offset + mult];
-    }
-    magnitude = magnitude / multiplier;
-    const magnitude2 = freqByteData[bar * multiplier];
-    magnitudes.push(magnitude2);
-    // analyserContext.fillStyle = `hsl( ` + Math.round((i * 360) / numBars) + `, 100%, 50%)`;
-    // analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
-  }
+//   // Draw rectangle for each frequency bin.
+//   for (let bar = 0; bar < numBars; ++bar) {
+//     let magnitude = 0;
+//     const offset = Math.floor(bar * multiplier);
+//     // gotta sum/average the block, or we miss narrow-bandwidth spikes
+//     for (let mult = 0; mult < multiplier; mult++) {
+//       magnitude += freqByteData[offset + mult];
+//     }
+//     magnitude = magnitude / multiplier;
+//     const magnitude2 = freqByteData[bar * multiplier];
+//     magnitudes.push(magnitude2);
+//     // analyserContext.fillStyle = `hsl( ` + Math.round((i * 360) / numBars) + `, 100%, 50%)`;
+//     // analyserContext.fillRect(i * SPACING, canvasHeight, BAR_WIDTH, -magnitude);
+//   }
 
-  return magnitudes;
-}
+//   return magnitudes;
+// }
 
 // export function getLatestPitch() {
 //   if (!firstAudioDataReceived) {

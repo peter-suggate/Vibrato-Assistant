@@ -22,7 +22,7 @@ import {
   registerOnPitchDataArrivedCallback
 } from 'helpers/Audio/AudioCapture';
 import {
-  frequncyAmplitudesToVolume,
+  // frequncyAmplitudesToVolume,
   logOfDifferenceBetweenAdjacentSemitones
 } from 'helpers/Audio/AudioProcessing';
 import FixedPeriodNoteRecorder from 'helpers/Audio/FixedPeriodNoteRecorder';
@@ -103,7 +103,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     this.stopRecording();
   }
 
-  onNewPitchRecorded(pitchAndOffsetCents) {
+  onNewPitchRecorded(pitchAndOffsetCents, volume) {
     if (this.noteRecorder === null) {
       if (useVariableNoteRecorder) {
         this.noteRecorder = new VariablePeriodNoteRecorder(true);
@@ -113,7 +113,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
       this.noteRecorder.start();
     }
 
-    const totalVolume = 1;
+    const totalVolume = volume;
     const {pitch, offsetCents} = pitchAndOffsetCents;
     this.addPitchAction({
       pitch,
@@ -273,7 +273,12 @@ export default class BasicRealtimeAudioDisplay extends Component {
     this.updateFps();
     const fps = this.currentFps();
     const maxVolume = 1;
-    const totalVolume = frequncyAmplitudesToVolume(volumes) / maxVolume;
+    let totalVolume = 0;
+    if (recordedPitches.length > 0) {
+      totalVolume = recordedPitches[recordedPitches.length - 1].volume;
+    }
+    totalVolume /= maxVolume;
+    // const totalVolume = frequncyAmplitudesToVolume(volumes) / maxVolume;
 
     mainPlotPitchScaling.updateVerticalScaling(recordedPitches);
 

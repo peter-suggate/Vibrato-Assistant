@@ -17,9 +17,21 @@ let audioProcessor = null;
 export default class AudioProcessorWorker
 {
   constructor(audioSampleRate) {
-    this.audioData = [];
-    this.pitchData = [];
+    // this.audioData = [];
+    // this.pitchData = [];
     this.audioSampleRate = audioSampleRate;
+  }
+
+  calculateVolumeLevel(dataArray) {
+    const len = dataArray.length;
+    let total = 0;
+    let idx = 0;
+    let rms = 0;
+    while (idx < len) {
+      total += Math.abs(dataArray[idx++]);
+    }
+    rms = Math.sqrt(total / len);
+    return rms;
   }
 
   addAudioData(dataArray) {
@@ -44,28 +56,29 @@ export default class AudioProcessorWorker
       }
     }
 
-    this.pitchData.push(latestPitchAndOffsetCents);
+    // this.pitchData.push(latestPitchAndOffsetCents);
 
     // Return the data back to the host thread.
     self.postMessage({
       messageId: AUDIO_PROCESSOR_RETURN_LATEST_PITCH_DATA_MESSAGE,
-      pitchAndOffsetCents: this.pitchData[this.pitchData.length - 1]
+      pitchAndOffsetCents: latestPitchAndOffsetCents,
+      volume: this.calculateVolumeLevel(dataArray)
     });
   }
 
-  getLatestPitches(fromIndex) {
-    const {pitchData} = this;
+  // getLatestPitches(fromIndex) {
+  //   const {pitchData} = this;
 
-    if (pitchData.length === 0 || pitchData.length <= fromIndex) {
-      return null;
-    }
+  //   if (pitchData.length === 0 || pitchData.length <= fromIndex) {
+  //     return null;
+  //   }
 
-    return pitchData[fromIndex];
-  }
+  //   return pitchData[fromIndex];
+  // }
 
-  getNumberOfPitches() {
-    return this.pitchData.length;
-  }
+  // getNumberOfPitches() {
+  //   return this.pitchData.length;
+  // }
 }
 
 self.addEventListener('message', function onMessage(messageEvent) {
