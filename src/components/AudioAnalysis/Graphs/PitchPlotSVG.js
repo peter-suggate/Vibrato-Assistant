@@ -4,23 +4,91 @@ import {
 pitchToNoteName
 } from 'helpers/Audio/AudioProcessing';
 
+const IN_TUNE_CENTS_TOLERANCE = 10;
+// const VARIED_LINE_THICKNESS = false;
+
+function getWidth(element) {
+  return element.clientWidth;
+}
+
+function getHeight(element) {
+  return element.clientHeight;
+}
+
 export default class PitchPlotSVG extends Component {
   static propTypes = {
     pitches: PropTypes.array.isRequired,
     notes: PropTypes.array.isRequired,
-    pitchScaling: PropTypes.object.isRequired
+    pitchScaling: PropTypes.object.isRequired,
+    timeToPixelsRatio: PropTypes.number.isRequired
   }
 
   constructor(props) {
     super(props);
+
+    this.onResize = this.onResize.bind(this);
+  }
+
+  state = {};
+
+  componentDidMount() {
+    if (!this.refs.container) {
+      throw new Error('Cannot find container div');
+    }
+
+    this._parent = this.refs.container.parentNode;
+    // this.updateDimensions();
+    // if (elementResize) {
+    //   // Experimental: `element-resize-event` fires when an element resizes.
+    //   // It attaches its own window resize listener and also uses
+    //   // requestAnimationFrame, so we can just call `this.updateDimensions`.
+    //   onElementResize(this._parent, this.updateDimensions)
+    // } else {
+    this.getWindow().addEventListener('resize', this.onResize, false);
+    // }
+    this.onResize();
+  }
+
+  componentWillUnmount() {
+    this.getWindow().removeEventListener('resize', this.onResize);
+  }
+
+  onResize() {
+    if (this.rqf) return;
+    // this.rqf = this.getWindow().requestAnimationFrame(() => {
+    //   this.rqf = null;
+    //   this.updateDimensions();
+    // });
+    this.rqf = this.getWindow().setTimeout(() => {
+      this.rqf = null;
+      this.updateDimensions();
+    }, 0);
+  }
+
+  // If the component is mounted in a different window to the javascript
+  // context, as with https://github.com/JakeGinnivan/react-popout
+  // then the `window` global will be different from the `window` that
+  // contains the component.
+  // Depends on `defaultView` which is not supported <IE9
+  getWindow() {
+    return this.refs.container ? (this.refs.container.ownerDocument.defaultView || window) : window;
   }
 
   static attributes = {
-    widthInPixels: 800,
-    heightInPixels: 400,
     staffLineFrequencies: [329.63, 392.00, 493.88, 587.33, 698.46],
     pitchMin: MIN_RECOGNISABLE_PITCH,
     pitchMax: 3520
+  }
+
+  updateDimensions() {
+    const container = this._parent;
+    const containerWidth = getWidth(container);
+    const containerHeight = getHeight(container);
+
+    if (containerWidth !== this.state.containerWidth ||
+      containerHeight !== this.state.containerHeight) {
+      this.setState({ containerWidth, containerHeight });
+    }
   }
 
   linearInterpolate(val, fromMin, fromMax, toMin, toMax) {
@@ -29,117 +97,144 @@ export default class PitchPlotSVG extends Component {
   }
 
   scaleTimeToPixelX(timeMsec) {
-    return timeMsec / 10.0;
+    const {timeToPixelsRatio} = this.props;
+
+    return timeMsec * timeToPixelsRatio;
   }
 
-  flipY(yPixel) {
-    const {heightInPixels} = PitchPlotSVG.attributes;
-    return heightInPixels - yPixel;
+  flipY(yPixel, height) {
+    return height - yPixel;
   }
 
   calcXOffset() {
-    const {widthInPixels} = PitchPlotSVG.attributes;
+    const {containerWidth} = this.state;
+    const width = containerWidth;
     const {pitches} = this.props;
     const numPitches = pitches.length;
     if (numPitches === 0) {
       return 0;
     }
 
-    const xOffset = Math.max(0, this.scaleTimeToPixelX(pitches[numPitches - 1].timeMsec) - widthInPixels);
+    const xOffset = Math.max(0, this.scaleTimeToPixelX(pitches[numPitches - 1].timeMsec) - width);
     return xOffset;
   }
 
-  // renderTrace() {
-  //   const {pitches} = this.props;
-  //   const {heightInPixels} = PitchPlotSVG.attributes;
+  renderTrace() {
+    const {pitches, pitchScaling} = this.props;
+    const {containerWidth, containerHeight} = this.state;
 
-  //   const lines = [];
+    const width = containerWidth;
+    const height = containerHeight;
+    const lines = [];
 
-  //   let index = 0;
-  //   const numPitches = pitches.length;
-  //   if (numPitches < 2) {
-  //     return lines;
-  //   }
+    let index = 0;
+    const numPitches = pitches.length;
+    if (numPitches < 2) {
+      return lines;
+    }
 
-  //   const xOffset = this.calcXOffset();
+    const xOffset = this.calcXOffset();
 
-  //   let {pitch, volume, timeMsec} = pitches[numPitches - 1];
-  //   let prevX = xOffset + this.scaleTimeToPixelX(timeMsec);
-  //   let prevY = this.flipY(this.scalePitchToPixelY(pitch));
+    let {pitch, offsetCents, volume, timeMsec} = pitches[numPitches - 1];
+    // let prevX = xOffset + this.scaleTimeToPixelX(timeMsec);
+    // let prevY = this.flipY(pitchScaling.scale(pitch, height), height);
+    let prevX = null;
+    let prevY = null;
 
-  //   for (let idx = numPitches - 2; idx > 0; --idx) {
-  //     const curPitch = pitches[idx];
-  //     pitch = curPitch.pitch;
-  //     volume = curPitch.volume;
-  //     timeMsec = curPitch.timeMsec;
+    for (let idx = numPitches - 1; idx > 0; --idx) {
+      const curPitch = pitches[idx];
+      pitch = curPitch.pitch;
+      offsetCents = curPitch.offsetCents;
+      volume = curPitch.volume;
+      timeMsec = curPitch.timeMsec;
 
-  //     const curX = this.scaleTimeToPixelX(timeMsec) - xOffset;
-  //     const curY = this.flipY(this.scalePitchToPixelY(pitch));
-  //     if (pitch >= MIN_RECOGNISABLE_PITCH && curY <= heightInPixels && prevY <= heightInPixels) {
-  //       const coords = {
-  //         x1: prevX,
-  //         y1: prevY,
-  //         x2: curX,
-  //         y2: curY
-  //       };
+      const curX = this.scaleTimeToPixelX(timeMsec) - xOffset;
+      if (curX > width && prevX > width) {
+        continue;
+      }
+      if (curX < 0) {
+        break;
+      }
 
-  //       const key = 'pitch_line_' + index;
-  //       const intensity = Math.floor(255 * volume);
-  //       const color = `rgb(${intensity}, ${intensity}, ${intensity}` + `)`;
-  //       const strokeWidth = `${0.5 + (volume * 5)}`;
-  //       lines.push(
-  //         <line {...coords} strokeLinecap="round" stroke={color} strokeWidth={strokeWidth} key={key} />
-  //       );
+      const curY = this.flipY(pitchScaling.scale(pitch, height), height);
+      if (prevX && prevY && pitch >= MIN_RECOGNISABLE_PITCH && curY <= height && prevY <= height) {
+        const coords = {
+          x1: prevX,
+          y1: prevY,
+          x2: curX,
+          y2: curY
+        };
 
-  //       index++;
-  //     }
+        let red = 0.25;
+        let green = 0.25;
+        let blue = 0.25;
+        if (offsetCents < -IN_TUNE_CENTS_TOLERANCE) {
+          red = 1.0;
+        } else if (offsetCents > IN_TUNE_CENTS_TOLERANCE) {
+          blue = 1.0;
+        } else {
+          red = green = blue = 1.0;
+        }
 
-  //     prevY = curY;
-  //     prevX = curX;
-  //   }
+        const key = 'pitch_line_' + index;
+        const colorIntensity = Math.floor((0.2 * 255) + (0.8 * 255 * volume));
+        const color = `rgb(${Math.floor(colorIntensity * red)}, ${Math.floor(colorIntensity * green)}, ${Math.floor(colorIntensity * blue)}` + `)`;
+        const strokeWidth = `${0.5 + (volume * 5)}`;
+        lines.push(
+          <line {...coords} strokeLinecap="round" stroke={color} strokeWidth={strokeWidth} key={key} />
+        );
 
-  //   // pitches.forEach(pitchVolAndTime => {
-  //   //   const {pitch, volume, timeMsec} = pitchVolAndTime;
+        index++;
+      }
 
-  //   //   if (pitch > 0) {
-  //   //     const nextX = widthInPixels - this.scaleTimeToPixelX(timeMsec);
-  //   //     const pitchPixel = this.scalePitchToPixelY(pitch);
-  //   //     const coords = {
-  //   //       x1: curX,
-  //   //       y1: this.flipY(prevPitchPixel),
-  //   //       x2: nextX,
-  //   //       y2: this.flipY(pitchPixel)
-  //   //     };
-  //   //     curX = nextX;
-  //   //     const key = 'pitch_line_' + index;
-  //   //     const intensity = Math.floor(255 * volume);
-  //   //     const color = `rgb(${intensity}, ${intensity}, ${intensity}` + `)`;
-  //   //     const strokeWidth = `${1 + (volume * 6)}`;
-  //   //     lines.push(
-  //   //       <line {...coords} strokeLinecap="round" stroke={color} strokeWidth={strokeWidth} key={key} />
-  //   //     );
+      prevY = curY;
+      prevX = curX;
+    }
 
-  //   //     prevPitchPixel = pitchPixel;
-  //   //   }
+    // pitches.forEach(pitchVolAndTime => {
+    //   const {pitch, volume, timeMsec} = pitchVolAndTime;
 
-  //     // index++;
-  //   // });
+    //   if (pitch > 0) {
+    //     const nextX = widthInPixels - this.scaleTimeToPixelX(timeMsec);
+    //     const pitchPixel = this.scalePitchToPixelY(pitch);
+    //     const coords = {
+    //       x1: curX,
+    //       y1: this.flipY(prevPitchPixel),
+    //       x2: nextX,
+    //       y2: this.flipY(pitchPixel)
+    //     };
+    //     curX = nextX;
+    //     const key = 'pitch_line_' + index;
+    //     const intensity = Math.floor(255 * volume);
+    //     const color = `rgb(${intensity}, ${intensity}, ${intensity}` + `)`;
+    //     const strokeWidth = `${1 + (volume * 6)}`;
+    //     lines.push(
+    //       <line {...coords} strokeLinecap="round" stroke={color} strokeWidth={strokeWidth} key={key} />
+    //     );
 
-  //   return lines;
-  // }
+    //     prevPitchPixel = pitchPixel;
+    //   }
+
+      // index++;
+    // });
+
+    return lines;
+  }
 
   renderStaff() {
     const {pitchScaling} = this.props;
-    const {widthInPixels, staffLineFrequencies, heightInPixels} = PitchPlotSVG.attributes;
+    const {staffLineFrequencies} = PitchPlotSVG.attributes;
+    const width = this.state.containerWidth;
+    const height = this.state.containerHeight;
     const lines = [];
     let index = 0;
 
     staffLineFrequencies.forEach(pitch => {
-      const pitchPixel = this.flipY(pitchScaling.scale(pitch, heightInPixels));
+      const pitchPixel = this.flipY(pitchScaling.scale(pitch, height), height);
       const coords = {
         x1: 0,
         y1: pitchPixel,
-        x2: widthInPixels,
+        x2: width,
         y2: pitchPixel
       };
       const key = 'staff_line_' + index++;
@@ -185,15 +280,16 @@ export default class PitchPlotSVG extends Component {
   render() {
     // const {widthInPixels, heightInPixels} = PitchPlotSVG.attributes;
 
-    // const trace = this.renderTrace();
+    const trace = this.renderTrace();
     const staff = this.renderStaff();
     const notes = null;// this.renderNotes();
 
     const styles = require('./Graphs.scss');
 
     return (
-      <div className={styles.pitchPlotSVG}>
-        <svg>
+      <div className={styles.pitchPlotSVG} ref="container">
+        <svg ref="svg">
+          {trace}
           {staff}
           {notes}
         </svg>

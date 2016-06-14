@@ -68,7 +68,7 @@ export default class PitchPlot extends Component {
     context.save();
     context.fillStyle = '#00F';
 
-    this.props.pitchScaling.updateVerticalScaling(this.props.pitches);
+    // this.props.pitchScaling.updateVerticalScaling(this.props.pitches);
 
     this.renderTrace(context);
 

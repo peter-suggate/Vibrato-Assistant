@@ -275,6 +275,8 @@ export default class BasicRealtimeAudioDisplay extends Component {
     const maxVolume = 1;
     const totalVolume = frequncyAmplitudesToVolume(volumes) / maxVolume;
 
+    mainPlotPitchScaling.updateVerticalScaling(recordedPitches);
+
     const showAll = false;
     let all = null;
     if (showAll) {
@@ -286,21 +288,29 @@ export default class BasicRealtimeAudioDisplay extends Component {
         </div>
       );
     }
+    const showCanvas = false;
+    let canvasElem = null;
+    if (showCanvas) {
+      canvasElem = <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.1} />;
+    }
+
     const showSVG = true;
     let svgElem = null;
     if (showSVG) {
-      svgElem = <PitchPlotSVG pitches={recordedPitches} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} />;
+      svgElem = <PitchPlotSVG pitches={recordedPitches} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.5} />;
     }
+
     const showMini = false;
     let miniPlot = null;
     if (showMini) {
       miniPlot = <PitchPlotCanvas className={styles.pitchPlotMiniParentContainer} pitches={recordedPitches} notes={recordedNotes} pitchScaling={miniPlotPitchScaling} timeToPixelsRatio={0.5} />;
     }
+
     const audioElements = (
       <div>
         <FpsReadout fps={fps} />
         <div className={styles.pitchPlotParentContainer}>
-          <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.1} />
+          {canvasElem}
           {svgElem}
           {miniPlot}
         </div>
