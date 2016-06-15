@@ -12,3 +12,4 @@ export TimePlot from './AudioAnalysis/TimePlot';
 export FpsReadout from './FpsReadout';
 export PitchPlotSVG from './AudioAnalysis/Graphs/PitchPlotSVG';
 export PitchPlotCanvas from './AudioAnalysis/Graphs/PitchPlotCanvas';
+export VolumePlot from './AudioAnalysis/Graphs/VolumePlot';

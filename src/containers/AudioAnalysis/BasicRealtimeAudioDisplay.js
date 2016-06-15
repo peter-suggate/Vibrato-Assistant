@@ -5,6 +5,7 @@ import {
   MusicNotationPanel,
   PitchPlotSVG,
   PitchPlotCanvas,
+  VolumePlot,
   FpsReadout
 } from 'components';
 import {connect} from 'react-redux';
@@ -323,6 +324,10 @@ export default class BasicRealtimeAudioDisplay extends Component {
         </div>
       );
     }
+
+    let volumePlot = null;
+    volumePlot = <VolumePlot pitches={recordedPitches} timeToPixelsRatio={0.1} />;
+
     const showCanvas = true;
     let canvasElem = null;
     if (showCanvas) {
@@ -344,6 +349,9 @@ export default class BasicRealtimeAudioDisplay extends Component {
     const audioElements = (
       <div>
         <FpsReadout fps={fps} />
+        <div className={styles.volumePlotParentContainer}>
+          {volumePlot}
+        </div>
         <div className={styles.pitchPlotParentContainer}>
           {canvasElem}
           {svgElem}

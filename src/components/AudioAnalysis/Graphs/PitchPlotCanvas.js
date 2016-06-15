@@ -1,4 +1,5 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PropTypes} from 'react';
+import PitchPlotBase from './PitchPlotBase';
 import {
   MIN_RECOGNISABLE_PITCH
 } from 'helpers/Audio/AudioProcessing';
@@ -6,50 +7,14 @@ import {
 const IN_TUNE_CENTS_TOLERANCE = 10;
 const VARIED_LINE_THICKNESS = true;
 
-export default class PitchPlot extends Component {
+export default class PitchPlot extends PitchPlotBase {
   static propTypes = {
-    pitches: PropTypes.array.isRequired,
     notes: PropTypes.array.isRequired,
-    pitchScaling: PropTypes.object.isRequired,
-    timeToPixelsRatio: PropTypes.number.isRequired
+    pitchScaling: PropTypes.object.isRequired
   }
 
   constructor(props) {
     super(props);
-  }
-
-  componentDidMount() {
-    const context = this.refs.canvas.getContext('2d');
-    this.resizeCanvasToFitContainer();
-    this.paint(context);
-  }
-
-  componentDidUpdate() {
-    const context = this.refs.canvas.getContext('2d');
-    this.resizeCanvasToFitContainer();
-    this.paint(context);
-  }
-
-  static attributes = {
-    staffLineFrequencies: [329.63, 392.00, 493.88, 587.33, 698.46]
-  }
-
-  resizeCanvasToFitContainer() {
-    const {canvas, container} = this.refs;
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
-    // const context = canvas.getContext('2d');
-    // context.clearRect(0, 0, canvas.width, canvas.height);
-  }
-
-  scaleTimeToPixelX(timeMsec) {
-    const {timeToPixelsRatio} = this.props;
-
-    return timeMsec * timeToPixelsRatio;
-  }
-
-  flipY(yPixel, height) {
-    return height - yPixel;
   }
 
   calcXOffset() {

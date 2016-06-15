@@ -37,15 +37,9 @@ export default class PitchPlotSVG extends Component {
     }
 
     this._parent = this.refs.container.parentNode;
-    // this.updateDimensions();
-    // if (elementResize) {
-    //   // Experimental: `element-resize-event` fires when an element resizes.
-    //   // It attaches its own window resize listener and also uses
-    //   // requestAnimationFrame, so we can just call `this.updateDimensions`.
-    //   onElementResize(this._parent, this.updateDimensions)
-    // } else {
+
     this.getWindow().addEventListener('resize', this.onResize, false);
-    // }
+
     this.onResize();
   }
 
