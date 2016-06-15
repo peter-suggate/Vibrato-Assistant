@@ -1,11 +1,12 @@
 import React, {PropTypes} from 'react';
 import PitchPlotBase from './PitchPlotBase';
 import {
-  MIN_RECOGNISABLE_PITCH
+  MIN_RECOGNISABLE_PITCH,
+  LOG_OF_DIFFERENCE_BETWEEN_ADJACENT_SEMITONES
 } from 'helpers/Audio/AudioProcessing';
 
 const IN_TUNE_CENTS_TOLERANCE = 10;
-const VARIED_LINE_THICKNESS = true;
+// const VARIED_LINE_THICKNESS = true;
 
 export default class PitchPlot extends PitchPlotBase {
   static propTypes = {
@@ -33,18 +34,25 @@ export default class PitchPlot extends PitchPlotBase {
     context.save();
     context.fillStyle = '#00F';
 
-    // this.props.pitchScaling.updateVerticalScaling(this.props.pitches);
-
     this.renderTrace(context);
 
     context.restore();
+  }
+
+  canDrawLine(pitch, prevPitch) {
+    if (pitch < MIN_RECOGNISABLE_PITCH) {
+      return false;
+    }
+
+    const pitchDelta = Math.log2(pitch) - Math.log2(prevPitch);
+    const isExcessiveLargeJump = Math.abs(pitchDelta) > 18 * LOG_OF_DIFFERENCE_BETWEEN_ADJACENT_SEMITONES;
+    return !isExcessiveLargeJump;
   }
 
   renderTrace(context) {
     const height = this.refs.canvas.clientHeight;
     const {pitches, pitchScaling} = this.props;
 
-    let index = 0;
     const numPitches = pitches.length;
     if (numPitches < 2) {
       return;
@@ -52,72 +60,64 @@ export default class PitchPlot extends PitchPlotBase {
 
     const xOffset = this.calcXOffset();
 
-    let {pitch, offsetCents, volume, timeMsec} = pitches[numPitches - 1];
+    let {pitch, offsetCents, timeMsec} = pitches[numPitches - 1];
+    let prevPitch = pitch;
     let prevX = xOffset + this.scaleTimeToPixelX(timeMsec);
     let prevY = this.flipY(pitchScaling.scale(pitch, height), height);
+    let prevColor = { red: 0, blue: 0, green: 0};
 
-    let numDrawnLines = 0;
-
-    if (!VARIED_LINE_THICKNESS) {
-      context.lineWidth = 1.0;
-      context.beginPath();
-    } else {
-      context.lineCap = 'round';
-    }
+    context.beginPath();
 
     for (let idx = numPitches - 2; idx > 0; --idx) {
       const curPitch = pitches[idx];
       pitch = curPitch.pitch;
       offsetCents = curPitch.offsetCents;
-      volume = curPitch.volume;
       timeMsec = curPitch.timeMsec;
 
       const curX = this.scaleTimeToPixelX(timeMsec) - xOffset;
       const curY = this.flipY(pitchScaling.scale(pitch, height), height);
-      if (pitch >= MIN_RECOGNISABLE_PITCH && curY <= height && prevY <= height) {
-        // const offsetCents = pitchToNoteNamePlusOffset(pitch).offset;
-        let red = 0.25;
-        let green = 0.25;
-        let blue = 0.25;
+
+      const drawLine = this.canDrawLine(pitch, prevPitch);
+
+      if (drawLine) {
+        const color = { red: 0.25, green: 0.25, blue: 0.25 };
         if (offsetCents < -IN_TUNE_CENTS_TOLERANCE) {
-          red = 1.0;
+          color.red = 1.0;
         } else if (offsetCents > IN_TUNE_CENTS_TOLERANCE) {
-          blue = 1.0;
+          color.blue = 1.0;
         } else {
-          red = green = blue = 1.0;
+          color.red = color.green = color.blue = 1.0;
         }
 
-        const colorIntensity = Math.floor((0.2 * 255) + (0.8 * 255 * volume));
-        const color = `rgb(${colorIntensity * red}, ${colorIntensity * green}, ${colorIntensity * blue}` + `)`;
-        context.strokeStyle = color;
+        if (color.red !== prevColor.red || color.green !== prevColor.green || color.blue !== prevColor.blue) {
+          const colorIntensity = 255;// Math.floor((0.2 * 255) + (0.8 * 255 * volume));
+          const colorStyle = `rgb(${Math.round(colorIntensity * color.red)}, ${Math.round(colorIntensity * color.green)}, ${Math.round(colorIntensity * color.blue)}` + `)`;
+          context.stroke(); // Finish the previous stroke.
 
-        if (VARIED_LINE_THICKNESS) {
-          context.lineWidth = 1.0 + (volume * 5);
+          // Change properties.
+          context.strokeStyle = colorStyle;
+
+          // Start the path in the new color.
           context.beginPath();
           context.moveTo(prevX, prevY);
           context.lineTo(curX, curY);
-          context.stroke();
+          prevColor = color;
         } else {
           context.moveTo(prevX, prevY);
           context.lineTo(curX, curY);
         }
-
-        index++;
-        numDrawnLines++;
       }
 
       prevY = curY;
       prevX = curX;
+      prevPitch = pitch;
 
       if (curX < 0) {
         break; // Finished drawing (from right to left).
       }
     }
 
-    if (!VARIED_LINE_THICKNESS) {
-      context.stroke();
-    }
-    // console.log(numDrawnLines);
+    context.stroke();
   }
 
   render() {

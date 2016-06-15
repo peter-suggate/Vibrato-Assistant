@@ -12,10 +12,10 @@ export function pitchToNote(pitch) {
   return 69 + 12 * Math.log2(pitch / 440);
 }
 
-const gLogOfDifferenceBetweenAdjacentSemitones = (Math.log2(880) - Math.log2(440)) / 12; // 12 semitones in an oxtave;
+export const LOG_OF_DIFFERENCE_BETWEEN_ADJACENT_SEMITONES = (Math.log2(880) - Math.log2(440)) / 12; // 12 semitones in an oxtave;
 
 export function logOfDifferenceBetweenAdjacentSemitones() {
-  return gLogOfDifferenceBetweenAdjacentSemitones;
+  return LOG_OF_DIFFERENCE_BETWEEN_ADJACENT_SEMITONES;
 }
 
 export function round2dp(number) {
@@ -146,4 +146,4 @@ export function frequncyAmplitudesToVolume(frequencyAmplitudes) {
   return totalVolume / frequencyAmplitudes.length;
 }
 
-export const MIN_RECOGNISABLE_PITCH = 55;
+export const MIN_RECOGNISABLE_PITCH = 110;

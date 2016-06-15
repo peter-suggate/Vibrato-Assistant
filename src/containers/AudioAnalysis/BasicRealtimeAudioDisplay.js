@@ -13,6 +13,7 @@ import {
   toggleAudioRecording,
   addPitch,
   addNote,
+  clearAudioData,
   bumpAnimationCounter
 } from 'redux/modules/audioRecorder';
 import {
@@ -41,7 +42,7 @@ const MAIN_PLOT_SCALING_PAD = 10 * logOfDifferenceBetweenAdjacentSemitones();
 const MINI_PLOT_SCALING_WINDOW_WIDTH_MS = 1000;
 const MINI_PLOT_SCALING_PAD = 2 * logOfDifferenceBetweenAdjacentSemitones();
 
-const FAKE_DATA = true;
+const FAKE_DATA = false;
 
 @connect(
   state => ({
@@ -156,6 +157,10 @@ export default class BasicRealtimeAudioDisplay extends Component {
       beginAudioRecording();
     }
 
+    if (this.props.recordedPitches.length > 0) {
+      this.clearAudioDataAction();
+    }
+
     this.startNoteRecorder();
 
     this.animating = true;
@@ -203,52 +208,6 @@ export default class BasicRealtimeAudioDisplay extends Component {
     this.rafID = window.requestAnimationFrame(this.updateLoop);
   }
 
-  // moreAudioRecorded() {
-  //   let pitch = getLatestPitch();
-  //   const {recordedPitches} = this.props;
-
-  //   const test = false;
-  //   if (test) {
-  //     pitch = nextFakePitch();
-  //   }
-
-  //   if (pitch === null || !(pitch >= 0)) {
-  //     pitch = 0;
-  //   }
-
-  //   if (this.noteRecorder === null) {
-  //     if (useVariableNoteRecorder) {
-  //       this.noteRecorder = new VariablePeriodNoteRecorder(true);
-  //     } else {
-  //       this.noteRecorder = new FixedPeriodNoteRecorder(60);
-  //     }
-  //     this.noteRecorder.start();
-  //   }
-
-  //   const frequencyAmplitudes = getLatestFrequencyData();
-  //   let totalVolume = 0;
-  //   if (test) {
-  //     totalVolume = nextFakeVolume();
-  //   } else {
-  //     totalVolume = frequncyAmplitudesToVolume(frequencyAmplitudes);
-  //     totalVolume /= 200;
-  //   }
-
-  //   this.addPitchAction(pitch, totalVolume, this.noteRecorder.timeAfterStartMsec());
-
-  //   if (RECORD_NOTES) {
-  //     if (this.noteRecorder) {
-  //       const newNoteAdded = this.noteRecorder.addCurrentPitch(pitch);
-  //       if (newNoteAdded) {
-  //         const {notePitch, startTimeMsec, durationMsec} = this.noteRecorder.getLatestNote();
-  //         this.addNoteAction(notePitch, startTimeMsec, durationMsec);
-  //       }
-  //     }
-  //   }
-
-  //   this.setState({ volumes: frequencyAmplitudes, pitch, recordedPitches });
-  // }
-
   addPitchAction(actionData) {
     const {dispatch} = this.props;
     dispatch(addPitch(actionData));
@@ -262,6 +221,11 @@ export default class BasicRealtimeAudioDisplay extends Component {
   toggleRecordingAction() {
     const {dispatch} = this.props;
     dispatch(toggleAudioRecording());
+  }
+
+  clearAudioDataAction() {
+    const {dispatch} = this.props;
+    dispatch(clearAudioData());
   }
 
   bumpAnimationCounter() {
