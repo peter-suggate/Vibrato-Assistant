@@ -4,7 +4,7 @@ import {
 } from 'helpers/Audio/AudioProcessing';
 
 const IN_TUNE_CENTS_TOLERANCE = 10;
-const VARIED_LINE_THICKNESS = false;
+const VARIED_LINE_THICKNESS = true;
 
 export default class PitchPlot extends Component {
   static propTypes = {
@@ -127,7 +127,7 @@ export default class PitchPlot extends Component {
         context.strokeStyle = color;
 
         if (VARIED_LINE_THICKNESS) {
-          context.lineWidth = 0.5 + (volume * 5);
+          context.lineWidth = 1.0 + (volume * 5);
           context.beginPath();
           context.moveTo(prevX, prevY);
           context.lineTo(curX, curY);
