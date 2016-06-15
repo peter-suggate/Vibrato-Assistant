@@ -1,11 +1,13 @@
 const TOGGLE_RECORDING_AUDIO = 'Vibrato/audioRecorder/TOGGLE_RECORDING_AUDIO';
 const ADD_NOTE = 'Vibrato/audioRecorder/ADD_NOTE';
 const ADD_PITCH = 'Vibrato/audioRecorder/ADD_PITCH';
+const BUMP_ANIMATION_COUNTER = 'Vibrato/audioRecorder/BUMP_ANIMATION_COUNTER';
 
 const initialState = {
   recording: false,
   recordedPitches: [],
-  recordedNotes: []
+  recordedNotes: [],
+  animationCounter: 0
 };
 
 export default function reducer(state = initialState, action = {}) {
@@ -30,6 +32,12 @@ export default function reducer(state = initialState, action = {}) {
         ...state,
         recordedNotes
       };
+    case BUMP_ANIMATION_COUNTER:
+      const {animationCounter} = state;
+      return {
+        ...state,
+        animationCounter: animationCounter + 1
+      };
     default:
       return state;
   }
@@ -52,5 +60,11 @@ export function addNote(notePitch, startTimeMsec, durationMsec) {
   return {
     type: ADD_NOTE,
     note: {notePitch, startTimeMsec, durationMsec }
+  };
+}
+
+export function bumpAnimationCounter() {
+  return {
+    type: BUMP_ANIMATION_COUNTER
   };
 }
