@@ -11,7 +11,8 @@ import {connect} from 'react-redux';
 import {
   toggleAudioRecording,
   addPitch,
-  addNote
+  addNote,
+  bumpAnimationCounter
 } from 'redux/modules/audioRecorder';
 import {
   microphoneAvailable,
@@ -43,7 +44,8 @@ const MINI_PLOT_SCALING_PAD = 2 * logOfDifferenceBetweenAdjacentSemitones();
   state => ({
     recordingAudio: state.audioRecorder.recording,
     recordedPitches: state.audioRecorder.recordedPitches,
-    recordedNotes: state.audioRecorder.recordedNotes
+    recordedNotes: state.audioRecorder.recordedNotes,
+    animationCounter: state.audioRecorder.animationCounter
   })
   )
 export default class BasicRealtimeAudioDisplay extends Component {
@@ -59,10 +61,11 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
     this.init();
 
-    // this.updateLoop = this.updateLoop.bind(this);
+    this.updateLoop = this.updateLoop.bind(this);
     this.toggleRecordingAction = this.toggleRecordingAction.bind(this);
     this.addPitchAction = this.addPitchAction.bind(this);
     this.addNoteAction = this.addNoteAction.bind(this);
+    this.bumpAnimationCounterAction = this.bumpAnimationCounter.bind(this);
     this.onNewPitchRecorded = this.onNewPitchRecorded.bind(this);
 
     this.changes = {};
@@ -71,6 +74,10 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
     this.mainPlotPitchScaling = new PitchPlotScaling(220, 440, MAIN_PLOT_SCALING_WINDOW_WIDTH_MS, MAIN_PLOT_SCALING_PAD);
     this.miniPlotPitchScaling = new PitchPlotScaling(220, 440, MINI_PLOT_SCALING_WINDOW_WIDTH_MS, MINI_PLOT_SCALING_PAD);
+
+    this.unprocessedStateChanges = {
+      pitchActions: []
+    };
   }
 
   state = {
@@ -115,7 +122,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
     const totalVolume = volume;
     const {pitch, offsetCents} = pitchAndOffsetCents;
-    this.addPitchAction({
+    this.unprocessedStateChanges.pitchActions.push({
       pitch,
       offsetCents,
       volume: totalVolume,
@@ -153,26 +160,32 @@ export default class BasicRealtimeAudioDisplay extends Component {
     // beginAudioRecording(this.moreAudioRecorded.bind(this));
     beginAudioRecording();
 
-    // this.animating = true;
+    this.animating = true;
 
-    // this.updateLoop();
+    this.updateLoop();
   }
 
   stopRecording() {
-    // this.animating = false;
+    this.animating = false;
 
     stopAudioRecording();
   }
 
-  // updateLoop() {
-  //   if (!this.animating) {
-  //     return;
-  //   }
+  updateLoop() {
+    if (!this.animating) {
+      return;
+    }
 
-  //   this.rafID = window.requestAnimationFrame(this.updateLoop);
+    // Force DOM updates as fast as we can go.
+    this.bumpAnimationCounterAction();
 
-  //   this.moreAudioRecorded();
-  // }
+    this.rafID = window.requestAnimationFrame(this.updateLoop);
+
+    this.unprocessedStateChanges.pitchActions.forEach(pitchData => {
+      this.addPitchAction(pitchData);
+    });
+    this.unprocessedStateChanges.pitchActions = [];
+  }
 
   // moreAudioRecorded() {
   //   let pitch = getLatestPitch();
@@ -233,6 +246,11 @@ export default class BasicRealtimeAudioDisplay extends Component {
   toggleRecordingAction() {
     const {dispatch} = this.props;
     dispatch(toggleAudioRecording());
+  }
+
+  bumpAnimationCounter() {
+    const {dispatch} = this.props;
+    dispatch(bumpAnimationCounter());
   }
 
   updateFps() {
