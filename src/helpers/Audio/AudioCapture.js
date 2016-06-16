@@ -12,7 +12,7 @@ if (!isNode) {
 }
 
 const FFT_SIZE = 256;
-const SCRIPT_PROCESSOR_SAMPLES_SIZE = 4 * FFT_SIZE;
+const SCRIPT_PROCESSOR_SAMPLES_SIZE = 2 * FFT_SIZE;
 
 let audioContext = null;
 let audioInput = null;

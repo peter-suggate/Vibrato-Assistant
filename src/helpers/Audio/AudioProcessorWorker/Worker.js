@@ -2,7 +2,8 @@
 import detectPitchMPM from '../detectPitch';
 import detectPitch from 'detect-pitch';
 import {
-  pitchToNoteNamePlusOffset
+  pitchToNoteNamePlusOffset,
+  LOG_OF_DIFFERENCE_BETWEEN_ADJACENT_SEMITONES
 } from 'helpers/Audio/AudioProcessing';
 import {
   AUDIO_PROCESSOR_INIT_MESSAGE,
@@ -11,6 +12,7 @@ import {
 } from './Consts';
 
 const USE_MPM = true; // The McLeod pitch method.
+const MEDIAN_FILTER_SIZE = 5;
 
 let audioProcessor = null;
 
@@ -20,6 +22,8 @@ export default class AudioProcessorWorker
     // this.audioData = [];
     // this.pitchData = [];
     this.audioSampleRate = audioSampleRate;
+
+    this.medianFilter = [];
   }
 
   calculateVolumeLevel(dataArray) {
@@ -32,6 +36,34 @@ export default class AudioProcessorWorker
     }
     rms = Math.sqrt(total / len);
     return rms;
+  }
+
+  medianFilterPitch(newPitch) {
+    let pitch = newPitch;
+    if (this.medianFilter.length === MEDIAN_FILTER_SIZE) {
+      if (pitch < 0) {
+        // console.log(pitch);
+        pitch = this.medianFilter[this.medianFilter.length - 1];
+      }
+      // else {
+      //   const pitchA = Math.log2(pitch);
+      //   const pitchB = Math.log2(this.medianFilter[this.medianFilter.length - 1]);
+      //   const delta = Math.abs(pitchA - pitchB);
+      //   // console.log(delta);
+      //   if (delta > 24 * LOG_OF_DIFFERENCE_BETWEEN_ADJACENT_SEMITONES) {
+      //     pitch = this.medianFilter[this.medianFilter.length - 1];
+      //   }
+      // }
+    }
+
+    this.medianFilter.push(pitch);
+    if (this.medianFilter.length > MEDIAN_FILTER_SIZE) {
+      this.medianFilter.shift();
+    }
+
+    const sortedPitches = this.medianFilter.slice(0);
+    sortedPitches.sort((aVal, bVal) => { return aVal - bVal; });
+    return sortedPitches[Math.floor(sortedPitches.length / 2)];
   }
 
   addAudioData(dataArray) {
@@ -47,6 +79,8 @@ export default class AudioProcessorWorker
         latestPitchAndOffsetCents = null;
       }
     }
+
+    latestPitchAndOffsetCents.pitch = this.medianFilterPitch(latestPitchAndOffsetCents.pitch);
 
     // Calculate the offset from the true note (in cents).
     if (latestPitchAndOffsetCents !== null) {

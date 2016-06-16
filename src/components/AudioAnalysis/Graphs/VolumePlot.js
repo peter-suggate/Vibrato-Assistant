@@ -77,7 +77,7 @@ export default class VolumePlot extends PitchPlotBase {
     context.lineTo(xPos, height);
 
     context.fill();
-    context.stroke();
+    // context.stroke();
   }
 
   render() {

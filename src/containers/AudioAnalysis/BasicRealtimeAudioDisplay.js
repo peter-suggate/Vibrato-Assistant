@@ -188,9 +188,6 @@ export default class BasicRealtimeAudioDisplay extends Component {
       return;
     }
 
-    // Force DOM updates as fast as we can go.
-    this.bumpAnimationCounterAction();
-
     if (FAKE_DATA) {
       this.addPitchAction({
         pitch: nextFakePitch(),
@@ -199,10 +196,15 @@ export default class BasicRealtimeAudioDisplay extends Component {
         timeMsec: this.noteRecorder.timeAfterStartMsec()
       });
     } else {
-      this.unprocessedStateChanges.pitchActions.forEach(pitchData => {
-        this.addPitchAction(pitchData);
-      });
-      this.unprocessedStateChanges.pitchActions = [];
+      if (this.unprocessedStateChanges.pitchActions.length === 0) {
+        // Force DOM updates as fast as we can go.
+        this.bumpAnimationCounterAction();
+      } else {
+        this.unprocessedStateChanges.pitchActions.forEach(pitchData => {
+          this.addPitchAction(pitchData);
+        });
+        this.unprocessedStateChanges.pitchActions = [];
+      }
     }
 
     this.rafID = window.requestAnimationFrame(this.updateLoop);
@@ -313,13 +315,13 @@ export default class BasicRealtimeAudioDisplay extends Component {
     const audioElements = (
       <div>
         <FpsReadout fps={fps} />
-        <div className={styles.volumePlotParentContainer}>
-          {volumePlot}
-        </div>
         <div className={styles.pitchPlotParentContainer}>
           {canvasElem}
           {svgElem}
           {miniPlot}
+        </div>
+        <div className={styles.volumePlotParentContainer}>
+          {volumePlot}
         </div>
         <h3>Current pitch: {pitch} Hz</h3>
         <h3>Current volume: {totalVolume} dB</h3>

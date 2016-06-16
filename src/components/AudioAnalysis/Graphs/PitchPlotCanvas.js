@@ -32,7 +32,7 @@ export default class PitchPlot extends PitchPlotBase {
 
   paint(context) {
     context.save();
-    context.fillStyle = '#00F';
+    // context.fillStyle = '#00F';
 
     this.renderTrace(context);
 
