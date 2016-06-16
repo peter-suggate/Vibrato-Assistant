@@ -12,7 +12,7 @@ import {
 } from './Consts';
 
 const USE_MPM = true; // The McLeod pitch method.
-const MEDIAN_FILTER_SIZE = 5;
+const MEDIAN_FILTER_SIZE = 3;
 
 let audioProcessor = null;
 
