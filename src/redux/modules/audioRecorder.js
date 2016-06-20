@@ -1,12 +1,14 @@
 const TOGGLE_RECORDING_AUDIO = 'Vibrato/audioRecorder/TOGGLE_RECORDING_AUDIO';
 const ADD_NOTE = 'Vibrato/audioRecorder/ADD_NOTE';
 const ADD_PITCH = 'Vibrato/audioRecorder/ADD_PITCH';
+const ADD_PITCH_MPM = 'Vibrato/audioRecorder/ADD_PITCH_MPM';
 const BUMP_ANIMATION_COUNTER = 'Vibrato/audioRecorder/BUMP_ANIMATION_COUNTER';
 const CLEAR_AUDIO_DATA = 'Vibrato/audioRecorder/CLEAR_AUDIO_DATA';
 
 const initialState = {
   recording: false,
   recordedPitches: [],
+  recordedPitchesMPM: [],
   recordedNotes: [],
   animationCounter: 0
 };
@@ -27,6 +29,14 @@ export default function reducer(state = initialState, action = {}) {
         recordedPitches
       };
     }
+    case ADD_PITCH_MPM: {
+      let {recordedPitchesMPM} = state;
+      recordedPitchesMPM = recordedPitchesMPM.concat(action.pitch);
+      return {
+        ...state,
+        recordedPitchesMPM
+      };
+    }
     case ADD_NOTE: {
       let {recordedNotes} = state;
       recordedNotes = recordedNotes.concat(action.note);
@@ -36,14 +46,16 @@ export default function reducer(state = initialState, action = {}) {
       };
     }
     case CLEAR_AUDIO_DATA: {
-      let {recordedNotes, recordedPitches, animationCounter} = state;
+      let {recordedNotes, recordedPitches, recordedPitchesMPM, animationCounter} = state;
       recordedNotes = [];
       recordedPitches = [];
+      recordedPitchesMPM = [];
       animationCounter = 0;
       return {
         ...state,
         recordedNotes,
         recordedPitches,
+        recordedPitchesMPM,
         animationCounter
       };
     }
@@ -67,6 +79,13 @@ export function toggleAudioRecording() {
 export function addPitch(pitchData) {
   return {
     type: ADD_PITCH,
+    pitch: pitchData
+  };
+}
+
+export function addPitchMPM(pitchData) {
+  return {
+    type: ADD_PITCH_MPM,
     pitch: pitchData
   };
 }

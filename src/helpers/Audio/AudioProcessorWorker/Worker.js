@@ -12,6 +12,7 @@ import {
 } from './Consts';
 
 const USE_MPM = true; // The McLeod pitch method.
+const USE_AUTOCORRELATION = true;
 const MEDIAN_FILTER_SIZE = 3;
 
 let audioProcessor = null;
@@ -39,12 +40,12 @@ export default class AudioProcessorWorker
   }
 
   medianFilterPitch(newPitch) {
-    let pitch = newPitch;
+    const pitch = newPitch;
     if (this.medianFilter.length === MEDIAN_FILTER_SIZE) {
-      if (pitch < 0) {
-        // console.log(pitch);
-        pitch = this.medianFilter[this.medianFilter.length - 1];
-      }
+      // if (pitch < 0) {
+      //   // console.log(pitch);
+      //   pitch = this.medianFilter[this.medianFilter.length - 1];
+      // }
       // else {
       //   const pitchA = Math.log2(pitch);
       //   const pitchB = Math.log2(this.medianFilter[this.medianFilter.length - 1]);
@@ -66,28 +67,36 @@ export default class AudioProcessorWorker
     return sortedPitches[Math.floor(sortedPitches.length / 2)];
   }
 
+  findAndSetOffset(pitchAndOffset) {
+    // Calculate the offset from the true note (in cents).
+    if (pitchAndOffset !== null) {
+      const note = pitchToNoteNamePlusOffset(pitchAndOffset.pitch);
+      if (note) {
+        pitchAndOffset.offsetCents = note.offset;
+      }
+    }
+  }
+
   addAudioData(dataArray) {
-    let latestPitchAndOffsetCents = {pitch: 0, offsetCents: 0};
+    const latestPitchAndOffsetCentsMPM = {pitch: 0, offsetCents: 0};
+    const latestPitchAndOffsetCents = {pitch: 0, offsetCents: 0};
     const {audioSampleRate} = this;
+
     if (USE_MPM) {
-      latestPitchAndOffsetCents.pitch = detectPitchMPM(dataArray, audioSampleRate);
-    } else {
+      latestPitchAndOffsetCentsMPM.pitch = detectPitchMPM(dataArray, audioSampleRate);
+      latestPitchAndOffsetCentsMPM.pitch = this.medianFilterPitch(latestPitchAndOffsetCentsMPM.pitch);
+
+      this.findAndSetOffset(latestPitchAndOffsetCentsMPM);
+    }
+
+    if (USE_AUTOCORRELATION) {
       const latestPeriod = detectPitch(dataArray);
       if (latestPeriod > 0) {
         latestPitchAndOffsetCents.pitch = audioSampleRate / latestPeriod;
-      } else {
-        latestPitchAndOffsetCents = null;
+        latestPitchAndOffsetCents.pitch = this.medianFilterPitch(latestPitchAndOffsetCents.pitch);
       }
-    }
 
-    latestPitchAndOffsetCents.pitch = this.medianFilterPitch(latestPitchAndOffsetCents.pitch);
-
-    // Calculate the offset from the true note (in cents).
-    if (latestPitchAndOffsetCents !== null) {
-      const note = pitchToNoteNamePlusOffset(latestPitchAndOffsetCents.pitch);
-      if (note) {
-        latestPitchAndOffsetCents.offsetCents = note.offset;
-      }
+      this.findAndSetOffset(latestPitchAndOffsetCents);
     }
 
     // this.pitchData.push(latestPitchAndOffsetCents);
@@ -95,6 +104,7 @@ export default class AudioProcessorWorker
     // Return the data back to the host thread.
     self.postMessage({
       messageId: AUDIO_PROCESSOR_RETURN_LATEST_PITCH_DATA_MESSAGE,
+      pitchAndOffsetCentsMPM: latestPitchAndOffsetCentsMPM,
       pitchAndOffsetCents: latestPitchAndOffsetCents,
       volume: this.calculateVolumeLevel(dataArray)
     });

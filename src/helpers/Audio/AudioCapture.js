@@ -11,8 +11,13 @@ if (!isNode) {
   Worker = require('worker?inline!helpers/Audio/AudioProcessorWorker/Worker');
 }
 
-const FFT_SIZE = 256;
-const SCRIPT_PROCESSOR_SAMPLES_SIZE = 2 * FFT_SIZE;
+// const FFT_SIZE = 512;
+// const SCRIPT_PROCESSOR_SAMPLES_SIZE = 2 * FFT_SIZE;
+const FFT_SIZE = 2048;
+const SCRIPT_PROCESSOR_SAMPLES_SIZE = 1024;
+
+const CALC_AUTO_CORRELATION = false;
+const FREQUENCY_ANALYSIS = false;
 
 let audioContext = null;
 let audioInput = null;
@@ -22,6 +27,7 @@ let analyserNode = null;
 let scriptNode = null;
 let audioProcessorWorker = null;
 let onPitchDataArrivedCallback = null;
+let onPitchDataMPMArrivedCallback = null;
 
 function initAudioContext() {
   if (typeof AudioContext !== `undefined`) {
@@ -33,6 +39,10 @@ function initAudioContext() {
 
 export function registerOnPitchDataArrivedCallback(callback) {
   onPitchDataArrivedCallback = callback;
+}
+
+export function registerOnPitchDataMPMArrivedCallback(callback) {
+  onPitchDataMPMArrivedCallback = callback;
 }
 
 function convertToMono(input) {
@@ -59,6 +69,17 @@ function createScriptNode() {
   };
 }
 
+export function getLatestFrequencyData() {
+  if (!analyserNode) {
+    return [];
+  }
+
+  const bufferLength = analyserNode.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  analyserNode.getByteFrequencyData(dataArray);
+  return dataArray;
+}
+
 function gotStream(stream) {
   inputPoint = audioContext.createGain();
 
@@ -70,9 +91,11 @@ function gotStream(stream) {
   audioInput = convertToMono(audioInput);
   audioInput.connect(inputPoint);
 
-  analyserNode = audioContext.createAnalyser();
-  analyserNode.fftSize = FFT_SIZE;
-  inputPoint.connect(analyserNode);
+  if (FREQUENCY_ANALYSIS) {
+    analyserNode = audioContext.createAnalyser();
+    analyserNode.fftSize = FFT_SIZE;
+    inputPoint.connect(analyserNode);
+  }
 
   createScriptNode();
   audioInput.connect(scriptNode);
@@ -92,7 +115,33 @@ function gotStream(stream) {
     switch (messageId) {
       case AUDIO_PROCESSOR_RETURN_LATEST_PITCH_DATA_MESSAGE:
         if (onPitchDataArrivedCallback) {
-          onPitchDataArrivedCallback(data.pitchAndOffsetCents, data.volume);
+          if (FREQUENCY_ANALYSIS) {
+            const dataArray = getLatestFrequencyData();
+            const len = dataArray.length;
+            // let bucketFreq = 0;
+            const bucketFreqStride = audioContext.sampleRate / len;
+            let tallestBucketIndex = 0;
+            let tallestBucketAmp = 0;
+            // let index = 0;
+            const MIN_INDEX = len / 50;
+            dataArray.forEach((amp, index) => {
+              if (amp >= tallestBucketAmp && index > MIN_INDEX) {
+                tallestBucketIndex = index;
+                tallestBucketAmp = amp;
+              }
+              // index++;
+            });
+            const pitch = tallestBucketIndex * bucketFreqStride * 0.5;
+            onPitchDataArrivedCallback({
+              pitch,
+              offsetCents: 0
+            }, data.volume);
+          } else if (CALC_AUTO_CORRELATION) {
+            onPitchDataArrivedCallback(data.pitchAndOffsetCents, data.volume);
+          }
+        }
+        if (onPitchDataMPMArrivedCallback) {
+          onPitchDataMPMArrivedCallback(data.pitchAndOffsetCentsMPM, data.volume);
         }
         break;
       default:

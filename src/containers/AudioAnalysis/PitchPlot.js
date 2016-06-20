@@ -24,7 +24,7 @@ export default class PitchPlot extends Component {
 
   linearInterpolate(val, fromMin, fromMax, toMin, toMax) {
     const tmp = (val - fromMin) / (fromMax - fromMin);
-    return (tmp + toMin) * (toMax - toMin);
+    return toMin + tmp * (toMax - toMin);
   }
 
   scalePitchToPixelY(pitch) {

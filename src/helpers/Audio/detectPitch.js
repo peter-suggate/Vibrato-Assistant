@@ -11,6 +11,7 @@
 const DEFAULT_CUTOFF = 0.97;
 const SMALL_CUTOFF = 0.9;
 const LOWER_PITCH_CUTOFF = 55.0; // Hz
+// const QUALITY_CUTOFF = 0.97;
 let cutoff;
 // let sampleRate;
 const nsdf = [];
@@ -147,9 +148,10 @@ export default function detectPitch(audioBuffer, sampleRate) {
     }
   });
 
-  if (periodEstimates.length === 0) {
+  if (periodEstimates.length === 0/* || highestAmplitude < QUALITY_CUTOFF*/) {
     pitch = -1;
   } else {
+    // console.log('highestAmplitude', highestAmplitude);
     // use the overall maximum to calculate a cutoff.
     // The cutoff value is based on the highest value and a relative
     // threshold.

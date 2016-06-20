@@ -6,12 +6,14 @@ import {
   PitchPlotSVG,
   PitchPlotCanvas,
   VolumePlot,
-  FpsReadout
+  FpsReadout,
+  FrequencyPlot
 } from 'components';
 import {connect} from 'react-redux';
 import {
   toggleAudioRecording,
   addPitch,
+  addPitchMPM,
   addNote,
   clearAudioData,
   bumpAnimationCounter
@@ -22,7 +24,9 @@ import {
   stopAudioRecording,
   // getLatestFrequencyData,
   // getLatestPitch,
-  registerOnPitchDataArrivedCallback
+  registerOnPitchDataArrivedCallback,
+  registerOnPitchDataMPMArrivedCallback,
+  getLatestFrequencyData
 } from 'helpers/Audio/AudioCapture';
 import {
   // frequncyAmplitudesToVolume,
@@ -34,20 +38,22 @@ import { nextFakePitch, nextFakeVolume } from 'helpers/Audio/TestHelpers';
 import PitchPlotScaling from 'helpers/Audio/PitchPlotScaling';
 
 const useVariableNoteRecorder = true;
-const FPS_WINDOW_SIZE = 10;
+const FPS_WINDOW_SIZE = 40;
 // const RECORD_NOTES = true;
 
 const MAIN_PLOT_SCALING_WINDOW_WIDTH_MS = 2000;
-const MAIN_PLOT_SCALING_PAD = 10 * logOfDifferenceBetweenAdjacentSemitones();
+const MAIN_PLOT_SCALING_PAD = 5 * logOfDifferenceBetweenAdjacentSemitones();
 const MINI_PLOT_SCALING_WINDOW_WIDTH_MS = 1000;
 const MINI_PLOT_SCALING_PAD = 2 * logOfDifferenceBetweenAdjacentSemitones();
 
 const FAKE_DATA = false;
+const SHOW_COMPARISON_PITCHES = false;
 
 @connect(
   state => ({
     recordingAudio: state.audioRecorder.recording,
     recordedPitches: state.audioRecorder.recordedPitches,
+    recordedPitchesMPM: state.audioRecorder.recordedPitchesMPM,
     recordedNotes: state.audioRecorder.recordedNotes,
     animationCounter: state.audioRecorder.animationCounter
   })
@@ -57,6 +63,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     recordingAudio: PropTypes.bool,
     recordedNotes: PropTypes.array,
     recordedPitches: PropTypes.array,
+    recordedPitchesMPM: PropTypes.array,
     dispatch: PropTypes.func.isRequired
   }
 
@@ -68,9 +75,11 @@ export default class BasicRealtimeAudioDisplay extends Component {
     this.updateLoop = this.updateLoop.bind(this);
     this.toggleRecordingAction = this.toggleRecordingAction.bind(this);
     this.addPitchAction = this.addPitchAction.bind(this);
+    this.addPitchMPMAction = this.addPitchMPMAction.bind(this);
     this.addNoteAction = this.addNoteAction.bind(this);
     this.bumpAnimationCounterAction = this.bumpAnimationCounter.bind(this);
     this.onNewPitchRecorded = this.onNewPitchRecorded.bind(this);
+    this.onNewPitchRecordedMPM = this.onNewPitchRecordedMPM.bind(this);
 
     this.changes = {};
     this.recentFps = [];
@@ -80,7 +89,8 @@ export default class BasicRealtimeAudioDisplay extends Component {
     this.miniPlotPitchScaling = new PitchPlotScaling(220, 440, MINI_PLOT_SCALING_WINDOW_WIDTH_MS, MINI_PLOT_SCALING_PAD);
 
     this.unprocessedStateChanges = {
-      pitchActions: []
+      pitchActions: [],
+      pitchActionsMPM: []
     };
   }
 
@@ -125,6 +135,17 @@ export default class BasicRealtimeAudioDisplay extends Component {
     });
   }
 
+  onNewPitchRecordedMPM(pitchAndOffsetCents, volume) {
+    const totalVolume = volume;
+    const {pitch, offsetCents} = pitchAndOffsetCents;
+    this.unprocessedStateChanges.pitchActionsMPM.push({
+      pitch,
+      offsetCents,
+      volume: totalVolume,
+      timeMsec: this.noteRecorder.timeAfterStartMsec()
+    });
+  }
+
   toggleStartStopRecording() {
     const {recordingAudio} = this.props;
     // const wasAnimating = this.animating;
@@ -152,6 +173,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     }
 
     registerOnPitchDataArrivedCallback(this.onNewPitchRecorded);
+    registerOnPitchDataMPMArrivedCallback(this.onNewPitchRecordedMPM);
 
     if (!FAKE_DATA) {
       beginAudioRecording();
@@ -196,14 +218,20 @@ export default class BasicRealtimeAudioDisplay extends Component {
         timeMsec: this.noteRecorder.timeAfterStartMsec()
       });
     } else {
-      if (this.unprocessedStateChanges.pitchActions.length === 0) {
+      if (this.unprocessedStateChanges.pitchActions.length === 0 &&
+          this.unprocessedStateChanges.pitchActionsMPM.length === 0) {
         // Force DOM updates as fast as we can go.
-        this.bumpAnimationCounterAction();
+//        this.bumpAnimationCounterAction();
       } else {
         this.unprocessedStateChanges.pitchActions.forEach(pitchData => {
           this.addPitchAction(pitchData);
         });
         this.unprocessedStateChanges.pitchActions = [];
+
+        this.unprocessedStateChanges.pitchActionsMPM.forEach(pitchData => {
+          this.addPitchMPMAction(pitchData);
+        });
+        this.unprocessedStateChanges.pitchActionsMPM = [];
       }
     }
 
@@ -213,6 +241,11 @@ export default class BasicRealtimeAudioDisplay extends Component {
   addPitchAction(actionData) {
     const {dispatch} = this.props;
     dispatch(addPitch(actionData));
+  }
+
+  addPitchMPMAction(actionData) {
+    const {dispatch} = this.props;
+    dispatch(addPitchMPM(actionData));
   }
 
   addNoteAction(note, startTime, duration) {
@@ -267,17 +300,17 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
     const {mainPlotPitchScaling, miniPlotPitchScaling} = this;
     const {volumes, pitch} = this.state;
-    const {recordingAudio, recordedPitches, recordedNotes} = this.props;
+    const {recordingAudio, recordedPitches, recordedPitchesMPM, recordedNotes} = this.props;
     const className = 'btn btn-default';
 
     this.updateFps();
     const fps = this.currentFps();
     let totalVolume = 0;
-    if (recordedPitches.length > 0) {
-      totalVolume = recordedPitches[recordedPitches.length - 1].volume;
+    if (recordedPitchesMPM.length > 0) {
+      totalVolume = recordedPitchesMPM[recordedPitchesMPM.length - 1].volume;
     }
 
-    mainPlotPitchScaling.updateVerticalScaling(recordedPitches);
+    mainPlotPitchScaling.updateVerticalScaling(recordedPitchesMPM);
 
     const showAll = false;
     let all = null;
@@ -291,25 +324,39 @@ export default class BasicRealtimeAudioDisplay extends Component {
       );
     }
 
+    const showVolume = false;
     let volumePlot = null;
-    volumePlot = <VolumePlot pitches={recordedPitches} timeToPixelsRatio={0.1} />;
+    if (showVolume) {
+      volumePlot = <VolumePlot pitches={recordedPitchesMPM} timeToPixelsRatio={0.1} />;
+    }
 
     const showCanvas = true;
     let canvasElem = null;
+    let canvasElemMPM = null;
     if (showCanvas) {
-      canvasElem = <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.1} />;
+      canvasElemMPM = <PitchPlotCanvas pitches={recordedPitchesMPM} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.1} />;
+      if (SHOW_COMPARISON_PITCHES) {
+        canvasElem = <PitchPlotCanvas pitches={recordedPitches} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.1} />;
+      }
     }
 
     const showSVG = false;
     let svgElem = null;
     if (showSVG) {
-      svgElem = <PitchPlotSVG pitches={recordedPitches} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.1} />;
+      svgElem = <PitchPlotSVG pitches={recordedPitchesMPM} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.1} />;
     }
 
     const showMini = false;
     let miniPlot = null;
     if (showMini) {
-      miniPlot = <PitchPlotCanvas className={styles.pitchPlotMiniParentContainer} pitches={recordedPitches} notes={recordedNotes} pitchScaling={miniPlotPitchScaling} timeToPixelsRatio={0.5} />;
+      miniPlot = <PitchPlotCanvas className={styles.pitchPlotMiniParentContainer} pitches={recordedPitchesMPM} notes={recordedNotes} pitchScaling={miniPlotPitchScaling} timeToPixelsRatio={0.5} />;
+    }
+
+    const showFrequencies = true;
+    let frequenciesPlot = null;
+    if (showFrequencies) {
+      const frequencyData = getLatestFrequencyData();
+      frequenciesPlot = <FrequencyPlot frequencyData={frequencyData} />;
     }
 
     const audioElements = (
@@ -317,11 +364,13 @@ export default class BasicRealtimeAudioDisplay extends Component {
         <FpsReadout fps={fps} />
         <div className={styles.pitchPlotParentContainer}>
           {canvasElem}
+          {canvasElemMPM}
           {svgElem}
           {miniPlot}
         </div>
         <div className={styles.volumePlotParentContainer}>
           {volumePlot}
+          {frequenciesPlot}
         </div>
         <h3>Current pitch: {pitch} Hz</h3>
         <h3>Current volume: {totalVolume} dB</h3>
