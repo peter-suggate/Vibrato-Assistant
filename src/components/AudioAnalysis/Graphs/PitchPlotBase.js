@@ -14,6 +14,12 @@ export default class PitchPlotBase extends Component {
     timeToPixelsRatio: PropTypes.number.isRequired
   }
 
+  constructor() {
+    super();
+
+    this.onResize = this.onResize.bind(this);
+  }
+
   state = {};
 
   componentDidMount() {

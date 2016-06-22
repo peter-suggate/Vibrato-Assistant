@@ -2,8 +2,7 @@
 import detectPitchMPM from '../detectPitch';
 import detectPitch from 'detect-pitch';
 import {
-  pitchToNoteNamePlusOffset,
-  LOG_OF_DIFFERENCE_BETWEEN_ADJACENT_SEMITONES
+  pitchToNoteNamePlusOffset
 } from 'helpers/Audio/AudioProcessing';
 import {
   AUDIO_PROCESSOR_INIT_MESSAGE,
