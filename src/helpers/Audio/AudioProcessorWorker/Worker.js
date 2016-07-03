@@ -9,9 +9,13 @@ import {
   AUDIO_PROCESSOR_ADD_DATA_MESSAGE,
   AUDIO_PROCESSOR_RETURN_LATEST_PITCH_DATA_MESSAGE
 } from './Consts';
+import {
+  CALC_MPM,
+  CALC_AUTO_CORRELATION,
+  PITCH_DETECTION_WINDOW_LENGTH,
+  PITCH_DETECTION_NUM_OVERLAPPED_REGIONS_PER_UPDATE
+} from 'AppConsts';
 
-const USE_MPM = true; // The McLeod pitch method.
-const USE_AUTOCORRELATION = true;
 const MEDIAN_FILTER_SIZE = 3;
 
 let audioProcessor = null;
@@ -24,6 +28,8 @@ export default class AudioProcessorWorker
     this.audioSampleRate = audioSampleRate;
 
     this.medianFilter = [];
+
+    this.overlappedAudioData = [];
   }
 
   calculateVolumeLevel(dataArray) {
@@ -76,20 +82,30 @@ export default class AudioProcessorWorker
     }
   }
 
-  addAudioData(dataArray) {
+  _addOverlappedAudioData(dataArray) {
+    this.overlappedAudioData = this.overlappedAudioData.concat(...dataArray);
+    const len = this.overlappedAudioData.length;
+    if (len > PITCH_DETECTION_WINDOW_LENGTH) {
+      this.overlappedAudioData = this.overlappedAudioData.slice(PITCH_DETECTION_WINDOW_LENGTH - len);
+    }
+  }
+
+  _addAudioData(dataArray) {
     const latestPitchAndOffsetCentsMPM = {pitch: 0, offsetCents: 0};
     const latestPitchAndOffsetCents = {pitch: 0, offsetCents: 0};
     const {audioSampleRate} = this;
 
-    if (USE_MPM) {
-      latestPitchAndOffsetCentsMPM.pitch = detectPitchMPM(dataArray, audioSampleRate);
+    this._addOverlappedAudioData(dataArray);
+
+    if (CALC_MPM) {
+      latestPitchAndOffsetCentsMPM.pitch = detectPitchMPM(this.overlappedAudioData, audioSampleRate);
       latestPitchAndOffsetCentsMPM.pitch = this.medianFilterPitch(latestPitchAndOffsetCentsMPM.pitch);
 
       this.findAndSetOffset(latestPitchAndOffsetCentsMPM);
     }
 
-    if (USE_AUTOCORRELATION) {
-      const latestPeriod = detectPitch(dataArray);
+    if (CALC_AUTO_CORRELATION) {
+      const latestPeriod = detectPitch(this.overlappedAudioData);
       if (latestPeriod > 0) {
         latestPitchAndOffsetCents.pitch = audioSampleRate / latestPeriod;
         latestPitchAndOffsetCents.pitch = this.medianFilterPitch(latestPitchAndOffsetCents.pitch);
@@ -97,8 +113,6 @@ export default class AudioProcessorWorker
 
       this.findAndSetOffset(latestPitchAndOffsetCents);
     }
-
-    // this.pitchData.push(latestPitchAndOffsetCents);
 
     // Return the data back to the host thread.
     self.postMessage({
@@ -109,19 +123,13 @@ export default class AudioProcessorWorker
     });
   }
 
-  // getLatestPitches(fromIndex) {
-  //   const {pitchData} = this;
+  addAudioData(dataArray) {
+    const CHUNK_SIZE = dataArray.length / PITCH_DETECTION_NUM_OVERLAPPED_REGIONS_PER_UPDATE;
 
-  //   if (pitchData.length === 0 || pitchData.length <= fromIndex) {
-  //     return null;
-  //   }
-
-  //   return pitchData[fromIndex];
-  // }
-
-  // getNumberOfPitches() {
-  //   return this.pitchData.length;
-  // }
+    for (let index = 0; index < PITCH_DETECTION_NUM_OVERLAPPED_REGIONS_PER_UPDATE; index++) {
+      this._addAudioData(dataArray.slice(index * CHUNK_SIZE, (index + 1) * CHUNK_SIZE));
+    }
+  }
 }
 
 self.addEventListener('message', function onMessage(messageEvent) {

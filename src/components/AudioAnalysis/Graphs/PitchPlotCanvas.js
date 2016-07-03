@@ -4,9 +4,7 @@ import {
   MIN_RECOGNISABLE_PITCH,
   LOG_OF_DIFFERENCE_BETWEEN_ADJACENT_SEMITONES
 } from 'helpers/Audio/AudioProcessing';
-
-const IN_TUNE_CENTS_TOLERANCE = 10;
-// const VARIED_LINE_THICKNESS = true;
+import {IN_TUNE_CENTS_TOLERANCE} from 'AppConsts';
 
 export default class PitchPlot extends PitchPlotBase {
   static propTypes = {
@@ -103,9 +101,11 @@ export default class PitchPlot extends PitchPlotBase {
           context.lineTo(curX, curY);
           prevColor = color;
         } else {
-          context.moveTo(prevX, prevY);
+//          context.moveTo(prevX, prevY);
           context.lineTo(curX, curY);
         }
+      } else {
+        context.moveTo(curX, curY);
       }
 
       prevY = curY;

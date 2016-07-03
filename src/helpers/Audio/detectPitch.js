@@ -9,7 +9,7 @@
 // const DEFAULT_BUFFER_SIZE = 1024;
 // const DEFAULT_CUTOFF = 0.97;
 const DEFAULT_CUTOFF = 0.97;
-const SMALL_CUTOFF = 0.9;
+const SMALL_CUTOFF = 0.5;
 const LOWER_PITCH_CUTOFF = 55.0; // Hz
 // const QUALITY_CUTOFF = 0.97;
 let cutoff;

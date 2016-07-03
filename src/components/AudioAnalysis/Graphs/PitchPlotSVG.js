@@ -70,6 +70,8 @@ export default class PitchPlotSVG extends Component {
 
   static attributes = {
     staffLineFrequencies: [329.63, 392.00, 493.88, 587.33, 698.46],
+    minStaffLineFrequency: 329.63,
+    maxStaffLineFrequency: 698.46,
     pitchMin: MIN_RECOGNISABLE_PITCH,
     pitchMax: 3520
   }
@@ -243,7 +245,7 @@ export default class PitchPlotSVG extends Component {
 
   renderNotes() {
     const {notes, pitchScaling} = this.props;
-    const {heightInPixels} = PitchPlotSVG.attributes;
+    const height = this.state.containerHeight;
 
     const noteHeads = [];
     const xOffset = this.calcXOffset();
@@ -253,7 +255,7 @@ export default class PitchPlotSVG extends Component {
       const {startTimeMsec, notePitch} = note;
 
       const noteName = pitchToNoteName(notePitch);
-      const pitchPixel = this.flipY(pitchScaling.scale(notePitch, heightInPixels));
+      const pitchPixel = this.flipY(pitchScaling.scale(notePitch, height), height);
       const coord = {
         cx: this.scaleTimeToPixelX(startTimeMsec) - xOffset,
         cy: pitchPixel
@@ -276,7 +278,7 @@ export default class PitchPlotSVG extends Component {
 
     const trace = this.renderTrace();
     const staff = this.renderStaff();
-    const notes = null;// this.renderNotes();
+    const notes = this.renderNotes();
 
     const styles = require('./Graphs.scss');
 

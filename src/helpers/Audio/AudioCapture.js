@@ -4,20 +4,19 @@ import {
   AUDIO_PROCESSOR_RETURN_LATEST_PITCH_DATA_MESSAGE
 } from './AudioProcessorWorker/Consts';
 
+import {
+  SCRIPT_PROCESSOR_SAMPLES_SIZE,
+  CALC_AUTO_CORRELATION,
+  PERFORM_FREQUENCY_ANALYSIS,
+  FREQUENCY_ANALYSIS_FFT_SIZE
+} from 'AppConsts';
+
 const isNode = require('detect-node');
 
 let Worker = null;
 if (!isNode) {
   Worker = require('worker?inline!helpers/Audio/AudioProcessorWorker/Worker');
 }
-
-// const FFT_SIZE = 512;
-// const SCRIPT_PROCESSOR_SAMPLES_SIZE = 2 * FFT_SIZE;
-const FFT_SIZE = 2048;
-const SCRIPT_PROCESSOR_SAMPLES_SIZE = 1024;
-
-const CALC_AUTO_CORRELATION = false;
-const FREQUENCY_ANALYSIS = false;
 
 let audioContext = null;
 let audioInput = null;
@@ -28,6 +27,18 @@ let scriptNode = null;
 let audioProcessorWorker = null;
 let onPitchDataArrivedCallback = null;
 let onPitchDataMPMArrivedCallback = null;
+let onTimeDataArrivedCallback = null;
+
+let fakeIndex = 0;
+const FAKE_HZ_START = 220;
+const USE_FAKE_RAW_DATA = false;
+
+let freqIndex = 0;
+
+function fakeFrequency() {
+  freqIndex++;
+  return FAKE_HZ_START + 0.001 * freqIndex;
+}
 
 function initAudioContext() {
   if (typeof AudioContext !== `undefined`) {
@@ -45,6 +56,10 @@ export function registerOnPitchDataMPMArrivedCallback(callback) {
   onPitchDataMPMArrivedCallback = callback;
 }
 
+export function registerOnTimeDataArrivedCallback(callback) {
+  onTimeDataArrivedCallback = callback;
+}
+
 function convertToMono(input) {
   const splitter = audioContext.createChannelSplitter(2);
   const merger = audioContext.createChannelMerger(2);
@@ -55,6 +70,11 @@ function convertToMono(input) {
   return merger;
 }
 
+let currentRandom = 0;
+let prevAccum = 0;
+let currentAccum = 0;
+let fakeIndexModulo = 0;
+
 function createScriptNode() {
   scriptNode = audioContext.createScriptProcessor(SCRIPT_PROCESSOR_SAMPLES_SIZE, 1, 1);
   scriptNode.onaudioprocess = function onAudioProcess(audioProcessingEvent) {
@@ -62,10 +82,36 @@ function createScriptNode() {
     const inputBuffer = audioProcessingEvent.inputBuffer;
     const inputData = inputBuffer.getChannelData(0);
 
-    audioProcessorWorker.postMessage({
-      messageId: AUDIO_PROCESSOR_ADD_DATA_MESSAGE,
-      audioData: inputData}
-      );
+    if (USE_FAKE_RAW_DATA) {
+      const fakeData = [];
+      const sampleLength = 1.0 / audioContext.sampleRate;
+      inputData.forEach(() => {
+        const rand = currentRandom;
+        fakeIndexModulo = (fakeIndex % 100);
+        if (fakeIndexModulo === 0) {
+          currentRandom = 0.05 * Math.random();
+          prevAccum = 0; // currentAccum;
+        }
+        const amp = (0.0 * Math.random() + 0.1);
+        currentAccum = prevAccum + Math.sin(2 * Math.PI * fakeIndexModulo * sampleLength * fakeFrequency() + rand);
+        fakeData.push(amp * currentAccum);
+        fakeIndex++;
+      });
+
+      onTimeDataArrivedCallback(fakeData);
+
+      audioProcessorWorker.postMessage({
+        messageId: AUDIO_PROCESSOR_ADD_DATA_MESSAGE,
+        audioData: fakeData}
+        );
+    } else {
+      onTimeDataArrivedCallback(inputData);
+
+      audioProcessorWorker.postMessage({
+        messageId: AUDIO_PROCESSOR_ADD_DATA_MESSAGE,
+        audioData: inputData}
+        );
+    }
   };
 }
 
@@ -91,9 +137,9 @@ function gotStream(stream) {
   audioInput = convertToMono(audioInput);
   audioInput.connect(inputPoint);
 
-  if (FREQUENCY_ANALYSIS) {
+  if (PERFORM_FREQUENCY_ANALYSIS) {
     analyserNode = audioContext.createAnalyser();
-    analyserNode.fftSize = FFT_SIZE;
+    analyserNode.fftSize = FREQUENCY_ANALYSIS_FFT_SIZE;
     inputPoint.connect(analyserNode);
   }
 
@@ -115,7 +161,7 @@ function gotStream(stream) {
     switch (messageId) {
       case AUDIO_PROCESSOR_RETURN_LATEST_PITCH_DATA_MESSAGE:
         if (onPitchDataArrivedCallback) {
-          if (FREQUENCY_ANALYSIS) {
+          if (PERFORM_FREQUENCY_ANALYSIS) {
             const dataArray = getLatestFrequencyData();
             const len = dataArray.length;
             // let bucketFreq = 0;

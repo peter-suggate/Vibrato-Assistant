@@ -1,15 +1,66 @@
 // const soundConst = Math.log(2) / 12;
 
-export const noteIndexConcertA = 69;
+// export const noteIndexConcertA = 69;
+export const A4 = 440.0;
+export const A4_INDEX = 57;
 
 export function noteToPitch(note) {
   // return 0.5 * Math.exp(soundConst * note);
-  return 440 * Math.pow(2, (note - 69) / 12);
+  return 440 * Math.pow(2, (note - A4_INDEX) / 12);
+}
+
+export function noteIndexForViolinKeyBaseNote(noteName) {
+  const LOWEST_VIOLIN_NOTE_INDEX = A4_INDEX - 12 - 2;
+
+  switch (noteName) {
+    case 'G':
+      return LOWEST_VIOLIN_NOTE_INDEX;
+    case 'G#':
+      return LOWEST_VIOLIN_NOTE_INDEX + 1;
+    case 'A':
+      return LOWEST_VIOLIN_NOTE_INDEX + 2;
+    case 'A#':
+      return LOWEST_VIOLIN_NOTE_INDEX + 3;
+    case 'B':
+      return LOWEST_VIOLIN_NOTE_INDEX + 4;
+    case 'C':
+      return LOWEST_VIOLIN_NOTE_INDEX + 5;
+    case 'C#':
+      return LOWEST_VIOLIN_NOTE_INDEX + 6;
+    case 'D':
+      return LOWEST_VIOLIN_NOTE_INDEX + 7;
+    case 'D#':
+      return LOWEST_VIOLIN_NOTE_INDEX + 8;
+    case 'E':
+      return LOWEST_VIOLIN_NOTE_INDEX + 9;
+    case 'F':
+      return LOWEST_VIOLIN_NOTE_INDEX + 10;
+    case 'F3':
+      return LOWEST_VIOLIN_NOTE_INDEX + 11;
+    default:
+      break;
+  }
+}
+
+const MAJOR_KEY_NOTE_SIZES = [0, 2, 2, 1, 2, 2, 2, 1];
+
+export function noteIndexInMajorKeyToSemitoneIndex(noteIndex) {
+  let semitones = 0;
+
+  for (let idx = 0; idx < noteIndex + 1; idx++) {
+    semitones += MAJOR_KEY_NOTE_SIZES[idx];
+  }
+
+  return semitones;
+}
+
+export function noteIndexForViolinMajorKeyNote(keyName, noteIndexInMajorKey) {
+  return noteIndexForViolinKeyBaseNote(keyName) + noteIndexInMajorKeyToSemitoneIndex(noteIndexInMajorKey);
 }
 
 export function pitchToNote(pitch) {
 //  return (Math.log(2 * pitch)) / soundConst;
-  return 69 + 12 * Math.log2(pitch / 440);
+  return A4_INDEX + 12 * Math.log2(pitch / 440);
 }
 
 export const LOG_OF_DIFFERENCE_BETWEEN_ADJACENT_SEMITONES = (Math.log2(880) - Math.log2(440)) / 12; // 12 semitones in an oxtave;
@@ -28,9 +79,6 @@ export function pitchToNoteNamePlusOffset(input) {
   } else if ((input < 27.5) || (input > 14080)) {
     return null;
   }
-
-  const A4 = 440.0;
-  const A4_INDEX = 57;
 
   const notes = [
     `C/0`, `C#/0`, `D/0`, `D#/0`, `E/0`, `F/0`, `F#/0`, `G/0`, `G#/0`, `A/0`, `A#/0`, `B/0`,

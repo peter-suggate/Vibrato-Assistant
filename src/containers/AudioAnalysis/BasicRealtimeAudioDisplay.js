@@ -5,6 +5,7 @@ import {
   MusicNotationPanel,
   PitchPlotSVG,
   PitchPlotCanvas,
+  TimeDataPlot,
   VolumePlot,
   FpsReadout,
   FrequencyPlot
@@ -14,6 +15,7 @@ import {
   toggleAudioRecording,
   addPitch,
   addPitchMPM,
+  addTimeData,
   addNote,
   clearAudioData,
   bumpAnimationCounter
@@ -26,6 +28,7 @@ import {
   // getLatestPitch,
   registerOnPitchDataArrivedCallback,
   registerOnPitchDataMPMArrivedCallback,
+  registerOnTimeDataArrivedCallback,
   getLatestFrequencyData
 } from 'helpers/Audio/AudioCapture';
 import {
@@ -34,8 +37,12 @@ import {
 } from 'helpers/Audio/AudioProcessing';
 import FixedPeriodNoteRecorder from 'helpers/Audio/FixedPeriodNoteRecorder';
 import VariablePeriodNoteRecorder from 'helpers/Audio/VariablePeriodNoteRecorder';
-import { nextFakePitch, nextFakeVolume } from 'helpers/Audio/TestHelpers';
+import {nextFakePitch, nextFakeVolume} from 'helpers/Audio/TestHelpers';
 import PitchPlotScaling from 'helpers/Audio/PitchPlotScaling';
+import {getNotesForKey} from 'helpers/Audio/ScaleNotes';
+import {
+  SHOW_LIVE_TIME_DATA
+} from 'AppConsts';
 
 const useVariableNoteRecorder = true;
 const FPS_WINDOW_SIZE = 40;
@@ -46,6 +53,7 @@ const MAIN_PLOT_SCALING_PAD = 5 * logOfDifferenceBetweenAdjacentSemitones();
 const MINI_PLOT_SCALING_WINDOW_WIDTH_MS = 1000;
 const MINI_PLOT_SCALING_PAD = 2 * logOfDifferenceBetweenAdjacentSemitones();
 
+const UPDATE_SCALING = false;
 const FAKE_DATA = false;
 const SHOW_COMPARISON_PITCHES = false;
 
@@ -55,6 +63,7 @@ const SHOW_COMPARISON_PITCHES = false;
     recordedPitches: state.audioRecorder.recordedPitches,
     recordedPitchesMPM: state.audioRecorder.recordedPitchesMPM,
     recordedNotes: state.audioRecorder.recordedNotes,
+    recordedTimeData: state.audioRecorder.recordedTimeData,
     animationCounter: state.audioRecorder.animationCounter
   })
   )
@@ -64,6 +73,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     recordedNotes: PropTypes.array,
     recordedPitches: PropTypes.array,
     recordedPitchesMPM: PropTypes.array,
+    recordedTimeData: PropTypes.array,
     dispatch: PropTypes.func.isRequired
   }
 
@@ -80,17 +90,19 @@ export default class BasicRealtimeAudioDisplay extends Component {
     this.bumpAnimationCounterAction = this.bumpAnimationCounter.bind(this);
     this.onNewPitchRecorded = this.onNewPitchRecorded.bind(this);
     this.onNewPitchRecordedMPM = this.onNewPitchRecordedMPM.bind(this);
+    this.onTimeDataRecorded = this.onTimeDataRecorded.bind(this);
 
     this.changes = {};
     this.recentFps = [];
     this.lastRenderTime = null;
 
-    this.mainPlotPitchScaling = new PitchPlotScaling(220, 440, MAIN_PLOT_SCALING_WINDOW_WIDTH_MS, MAIN_PLOT_SCALING_PAD);
-    this.miniPlotPitchScaling = new PitchPlotScaling(220, 440, MINI_PLOT_SCALING_WINDOW_WIDTH_MS, MINI_PLOT_SCALING_PAD);
+    this.mainPlotPitchScaling = new PitchPlotScaling(true, 110, 1760, MAIN_PLOT_SCALING_WINDOW_WIDTH_MS, MAIN_PLOT_SCALING_PAD);
+    this.miniPlotPitchScaling = new PitchPlotScaling(true, 110, 1760, MINI_PLOT_SCALING_WINDOW_WIDTH_MS, MINI_PLOT_SCALING_PAD);
 
     this.unprocessedStateChanges = {
       pitchActions: [],
-      pitchActionsMPM: []
+      pitchActionsMPM: [],
+      timeDataActions: []
     };
   }
 
@@ -146,6 +158,12 @@ export default class BasicRealtimeAudioDisplay extends Component {
     });
   }
 
+  onTimeDataRecorded(timeData) {
+    this.unprocessedStateChanges.timeDataActions.push({
+      timeData
+    });
+  }
+
   toggleStartStopRecording() {
     const {recordingAudio} = this.props;
     // const wasAnimating = this.animating;
@@ -174,12 +192,13 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
     registerOnPitchDataArrivedCallback(this.onNewPitchRecorded);
     registerOnPitchDataMPMArrivedCallback(this.onNewPitchRecordedMPM);
+    registerOnTimeDataArrivedCallback(this.onTimeDataRecorded);
 
     if (!FAKE_DATA) {
       beginAudioRecording();
     }
 
-    if (this.props.recordedPitches.length > 0) {
+    if (this.props.recordedPitches.length > 0 || this.props.recordedPitchesMPM.length > 0) {
       this.clearAudioDataAction();
     }
 
@@ -218,21 +237,20 @@ export default class BasicRealtimeAudioDisplay extends Component {
         timeMsec: this.noteRecorder.timeAfterStartMsec()
       });
     } else {
-      if (this.unprocessedStateChanges.pitchActions.length === 0 &&
-          this.unprocessedStateChanges.pitchActionsMPM.length === 0) {
-        // Force DOM updates as fast as we can go.
-//        this.bumpAnimationCounterAction();
-      } else {
-        this.unprocessedStateChanges.pitchActions.forEach(pitchData => {
-          this.addPitchAction(pitchData);
-        });
-        this.unprocessedStateChanges.pitchActions = [];
+      this.unprocessedStateChanges.pitchActions.forEach(pitchData => {
+        this.addPitchAction(pitchData);
+      });
+      this.unprocessedStateChanges.pitchActions = [];
 
-        this.unprocessedStateChanges.pitchActionsMPM.forEach(pitchData => {
-          this.addPitchMPMAction(pitchData);
-        });
-        this.unprocessedStateChanges.pitchActionsMPM = [];
-      }
+      this.unprocessedStateChanges.pitchActionsMPM.forEach(pitchData => {
+        this.addPitchMPMAction(pitchData);
+      });
+      this.unprocessedStateChanges.pitchActionsMPM = [];
+
+      this.unprocessedStateChanges.timeDataActions.forEach(timeData => {
+        this.addTimeDataAction(timeData);
+      });
+      this.unprocessedStateChanges.timeDataActions = [];
     }
 
     this.rafID = window.requestAnimationFrame(this.updateLoop);
@@ -246,6 +264,11 @@ export default class BasicRealtimeAudioDisplay extends Component {
   addPitchMPMAction(actionData) {
     const {dispatch} = this.props;
     dispatch(addPitchMPM(actionData));
+  }
+
+  addTimeDataAction(actionData) {
+    const {dispatch} = this.props;
+    dispatch(addTimeData(actionData.timeData));
   }
 
   addNoteAction(note, startTime, duration) {
@@ -300,7 +323,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
     const {mainPlotPitchScaling, miniPlotPitchScaling} = this;
     const {volumes, pitch} = this.state;
-    const {recordingAudio, recordedPitches, recordedPitchesMPM, recordedNotes} = this.props;
+    const {recordingAudio, recordedPitches, recordedPitchesMPM, recordedNotes, recordedTimeData} = this.props;
     const className = 'btn btn-default';
 
     this.updateFps();
@@ -310,7 +333,11 @@ export default class BasicRealtimeAudioDisplay extends Component {
       totalVolume = recordedPitchesMPM[recordedPitchesMPM.length - 1].volume;
     }
 
-    mainPlotPitchScaling.updateVerticalScaling(recordedPitchesMPM);
+    if (UPDATE_SCALING) {
+      mainPlotPitchScaling.updateVerticalScaling(recordedPitchesMPM);
+    }
+
+    const scaleNotes = getNotesForKey('C', 60);
 
     const showAll = false;
     let all = null;
@@ -324,7 +351,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
       );
     }
 
-    const showVolume = false;
+    const showVolume = true;
     let volumePlot = null;
     if (showVolume) {
       volumePlot = <VolumePlot pitches={recordedPitchesMPM} timeToPixelsRatio={0.1} />;
@@ -340,10 +367,10 @@ export default class BasicRealtimeAudioDisplay extends Component {
       }
     }
 
-    const showSVG = false;
+    const showSVG = true;
     let svgElem = null;
     if (showSVG) {
-      svgElem = <PitchPlotSVG pitches={recordedPitchesMPM} notes={recordedNotes} pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.1} />;
+      svgElem = <PitchPlotSVG pitches={recordedPitchesMPM} notes={scaleNotes} pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.1} />;
     }
 
     const showMini = false;
@@ -359,10 +386,17 @@ export default class BasicRealtimeAudioDisplay extends Component {
       frequenciesPlot = <FrequencyPlot frequencyData={frequencyData} />;
     }
 
+    const showTimeData = SHOW_LIVE_TIME_DATA;
+    let timeDataPlot = null;
+    if (showTimeData) {
+      timeDataPlot = <TimeDataPlot timeData={recordedTimeData} />;
+    }
+
     const audioElements = (
       <div>
         <FpsReadout fps={fps} />
         <div className={styles.pitchPlotParentContainer}>
+          {timeDataPlot}
           {canvasElem}
           {canvasElemMPM}
           {svgElem}

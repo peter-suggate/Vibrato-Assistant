@@ -4,11 +4,13 @@ const ADD_PITCH = 'Vibrato/audioRecorder/ADD_PITCH';
 const ADD_PITCH_MPM = 'Vibrato/audioRecorder/ADD_PITCH_MPM';
 const BUMP_ANIMATION_COUNTER = 'Vibrato/audioRecorder/BUMP_ANIMATION_COUNTER';
 const CLEAR_AUDIO_DATA = 'Vibrato/audioRecorder/CLEAR_AUDIO_DATA';
+const ADD_TIME_DATA = 'Vibrato/audioRecorder/ADD_TIME_DATA';
 
 const initialState = {
   recording: false,
   recordedPitches: [],
   recordedPitchesMPM: [],
+  recordedTimeData: [],
   recordedNotes: [],
   animationCounter: 0
 };
@@ -37,6 +39,18 @@ export default function reducer(state = initialState, action = {}) {
         recordedPitchesMPM
       };
     }
+    case ADD_TIME_DATA: {
+      let {recordedTimeData} = state;
+      recordedTimeData = recordedTimeData.concat(...action.timeData);
+      const MAX_RECORDED_TIME_DATA = 100000;
+      if (recordedTimeData.length > MAX_RECORDED_TIME_DATA) {
+        recordedTimeData = recordedTimeData.slice(recordedTimeData.length - MAX_RECORDED_TIME_DATA);
+      }
+      return {
+        ...state,
+        recordedTimeData
+      };
+    }
     case ADD_NOTE: {
       let {recordedNotes} = state;
       recordedNotes = recordedNotes.concat(action.note);
@@ -46,16 +60,18 @@ export default function reducer(state = initialState, action = {}) {
       };
     }
     case CLEAR_AUDIO_DATA: {
-      let {recordedNotes, recordedPitches, recordedPitchesMPM, animationCounter} = state;
+      let {recordedNotes, recordedPitches, recordedPitchesMPM, recordedTimeData, animationCounter} = state;
       recordedNotes = [];
       recordedPitches = [];
       recordedPitchesMPM = [];
+      recordedTimeData = [];
       animationCounter = 0;
       return {
         ...state,
         recordedNotes,
         recordedPitches,
         recordedPitchesMPM,
+        recordedTimeData,
         animationCounter
       };
     }
@@ -94,6 +110,13 @@ export function addNote(notePitch, startTimeMsec, durationMsec) {
   return {
     type: ADD_NOTE,
     note: {notePitch, startTimeMsec, durationMsec }
+  };
+}
+
+export function addTimeData(timeData) {
+  return {
+    type: ADD_TIME_DATA,
+    timeData
   };
 }
 

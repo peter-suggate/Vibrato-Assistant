@@ -6,28 +6,34 @@ const NICE_SCALING_INTERP_SPEED = 0.05;
 const NICE_SCALING_INTERP_SPEED_INV = 1 - NICE_SCALING_INTERP_SPEED;
 
 export default class PitchPlotScaling {
-  constructor(initialMin, initialMax, windowWidthMs, scalingPadFreq) {
-    this.logPitchMin = Math.log2(initialMin);
-    this.logPitchMax = Math.log2(initialMax);
+  constructor(logScaling, initialMin, initialMax, windowWidthMs, scalingPadFreq) {
+    this.logScaling = logScaling;
+    if (this.logScaling) {
+      this.pitchMin = Math.log2(initialMin);
+      this.pitchMax = Math.log2(initialMax);
+    } else {
+      this.pitchMin = initialMin;
+      this.pitchMax = initialMax;
+    }
     this.windowWidthMs = windowWidthMs;
     this.scalingPadFreq = scalingPadFreq;
 
-    this.nicePitchRange = { min: this.logPitchMin, max: this.logPitchMax };
+    this.nicePitchRange = { min: this.pitchMin, max: this.pitchMax };
   }
 
-  logMin() {
-    return this.logPitchMin;
+  getMin() {
+    return this.pitchMin;
   }
 
-  logMax() {
-    return this.logPitchMax;
+  getMax() {
+    return this.pitchMax;
   }
 
   updateVerticalScaling(pitchesAndTimes) {
     this._updateNiceVerticalScaling(pitchesAndTimes);
 
-    this.logPitchMin = NICE_SCALING_INTERP_SPEED_INV * this.logPitchMin + NICE_SCALING_INTERP_SPEED * this.nicePitchRange.min;
-    this.logPitchMax = NICE_SCALING_INTERP_SPEED_INV * this.logPitchMax + NICE_SCALING_INTERP_SPEED * this.nicePitchRange.max;
+    this.pitchMin = NICE_SCALING_INTERP_SPEED_INV * this.pitchMin + NICE_SCALING_INTERP_SPEED * this.nicePitchRange.min;
+    this.pitchMax = NICE_SCALING_INTERP_SPEED_INV * this.pitchMax + NICE_SCALING_INTERP_SPEED * this.nicePitchRange.max;
   }
 
   linearInterpolate(val, fromMin, fromMax, toMin, toMax) {
@@ -36,11 +42,14 @@ export default class PitchPlotScaling {
   }
 
   scale(pitch, containerHeightInPixels) {
-    const logPitch = Math.log2(pitch);
+    let thePitch = pitch;
+    if (this.logScaling) {
+      thePitch = Math.log2(pitch);
+    }
 
     return this.linearInterpolate(
-      logPitch,
-      this.logMin(), this.logMax(),
+      thePitch,
+      this.getMin(), this.getMax(),
       0, containerHeightInPixels
     );
   }
@@ -64,9 +73,12 @@ export default class PitchPlotScaling {
         continue;
       }
 
-      const logPitch = Math.log2(pitch);
-      maxPitch = Math.max(logPitch, maxPitch);
-      minPitch = Math.min(logPitch, minPitch);
+      let thePitch = pitch;
+      if (this.logScaling) {
+        thePitch = Math.log2(pitch);
+      }
+      maxPitch = Math.max(thePitch, maxPitch);
+      minPitch = Math.min(thePitch, minPitch);
       foundOne = true;
     }
 
