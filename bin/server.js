@@ -1,28 +1,11 @@
-#!/usr/bin/env node
-require('../server.babel'); // babel registration (runtime transpilation for node)
-var path = require('path');
-var rootDir = path.resolve(__dirname, '..');
-/**
- * Define isomorphic constants.
- */
-global.__CLIENT__ = false;
-global.__SERVER__ = true;
-global.__DISABLE_SSR__ = false;  // <----- DISABLES SERVER SIDE RENDERING FOR ERROR DEBUGGING
-global.__DEVELOPMENT__ = process.env.NODE_ENV !== 'production';
+import config from '../config'
+import server from '../server/main'
+import _debug from 'debug'
 
-if (__DEVELOPMENT__) {
-  if (!require('piping')({
-      hook: true,
-      ignore: /(\/\.|~$|\.json|\.scss$)/i
-    })) {
-    return;
-  }
-}
+const debug = _debug('app:bin:server')
+const port = config.server_port
+const host = config.server_host
 
-// https://github.com/halt-hammerzeit/webpack-isomorphic-tools
-var WebpackIsomorphicTools = require('webpack-isomorphic-tools');
-global.webpackIsomorphicTools = new WebpackIsomorphicTools(require('../webpack/webpack-isomorphic-tools'))
-  .development(__DEVELOPMENT__)
-  .server(rootDir, function() {
-    require('../src/server');
-  });
+server.listen(port)
+debug(`Server is now running at http://${host}:${port}.`)
+debug(`Server accessible via localhost:${port} if you are using the project defaults.`)
