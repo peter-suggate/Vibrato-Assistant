@@ -1,5 +1,3 @@
-import * as audioRecorder from './audio-recorder'
+import reducer from './audio-recorder'
 
-export {
-  audioRecorder
-}
+export default reducer
