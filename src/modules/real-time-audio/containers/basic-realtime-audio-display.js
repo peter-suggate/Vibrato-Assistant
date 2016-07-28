@@ -321,7 +321,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     const styles = require('./basic-realtime-audio-display.scss')
 
     const {mainPlotPitchScaling, miniPlotPitchScaling} = this
-    const {volumes, pitch} = this.state
+    const {pitch} = this.state
     const {recordingAudio, recordedPitches, recordedPitchesMPM, recordedNotes, recordedTimeData} = this.props
     const className = 'btn btn-default'
 
