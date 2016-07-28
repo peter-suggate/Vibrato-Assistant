@@ -26,14 +26,14 @@ const history = syncHistoryWithStore(browserHistory, store, {
   selectLocationState: (state) => state.router
 })
 
-// ========================================================
-// Developer Tools Setup
-// ========================================================
-if (__DEBUG__) {
-  if (window.devToolsExtension) {
-    window.devToolsExtension.open()
-  }
-}
+// // ========================================================
+// // Developer Tools Setup
+// // ========================================================
+// if (__DEBUG__) {
+//   if (window.devToolsExtension) {
+//     window.devToolsExtension.open()
+//   }
+// }
 
 // ========================================================
 // Render Setup
