@@ -3,7 +3,7 @@ import classes from './start-button.scss'
 
 export const StartButton = ({ onClick }) => {
   return <div>
-    <button className={classes.button} onClick={onClick}>Start</button>
+    <button className={classes.button + ' large'} onClick={onClick}>Start</button>
   </div>
 }
 

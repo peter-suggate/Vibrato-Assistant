@@ -3,7 +3,6 @@ import * as constants from './constants'
 import { StartScreen } from 'modules/start-screen'
 import { RecordScaleScreen } from 'modules/record-scale-screen'
 
-console.log(RecordScaleScreen)
 if (!RecordScaleScreen) {
   throw Error('app-screens|reducers RecordScaleScreen not defined')
 }

@@ -21,7 +21,7 @@ export default class RecordScaleScreen extends Component {
   }
 
   render () {
-    return <div>
+    return <div key="recordScaleScreenContainer">
       <button onClick={this.onBackClicked}>Back</button>
     </div>
   }

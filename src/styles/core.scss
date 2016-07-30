@@ -13,11 +13,33 @@
     margin: 0;
     padding: 0;
     height: 100%;
+
+    background-color: #282828;
+    color: #ccc;
+    font-family: 'Roboto Condensed', sans-serif;
   }
 
   *,
   *:before,
   *:after {
     box-sizing: inherit;
+  }
+
+  button {
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 5px;
+    border: 1px solid #555;
+    font-size: 18px;
+    padding: 4px 12px;
+  }
+
+  button:hover {
+    background-color: rgba(255,255,255,0.06);
+    border: 1px solid #777;
+  }
+
+  button.large {
+    font-size: 24px;
+    padding: 8px 24px;
   }
 }

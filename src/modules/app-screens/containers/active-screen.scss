@@ -1,0 +1,64 @@
+.container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+// The span is added by ReactCSSTransitionGroup
+.container span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+:global {
+
+.transitionNext-enter {
+  // opacity: 0.01;
+  transform: translate(100%, 0);
+}
+
+.transitionNext-enter.transitionNext-enter-active {
+  // opacity: 1;
+  // transition: opacity 500ms ease-in;
+  transform: translate(0, 0);
+  transition: transform 300ms ease-in;
+}
+
+.transitionNext-leave {
+  // opacity: 1;
+  transform: translate(0, 0);
+}
+
+.transitionNext-leave.transitionNext-leave-active {
+  // opacity: 0.01;
+  // transition: opacity 300ms ease-in;
+  transform: translate(-100%, 0);
+  transition: transform 200ms ease-in;
+}
+
+.transitionPrev-enter {
+  // opacity: 0.01;
+  transform: translate(-100%, 0);
+}
+
+.transitionPrev-enter.transitionPrev-enter-active {
+  // opacity: 1;
+  // transition: opacity 500ms ease-in;
+  transform: translate(0, 0);
+  transition: transform 300ms ease-in;
+}
+
+.transitionPrev-leave {
+  // opacity: 1;
+  transform: translate(0, 0);
+}
+
+.transitionPrev-leave.transitionPrev-leave-active {
+  // opacity: 0.01;
+  // transition: opacity 300ms ease-in;
+  transform: translate(100%, 0);
+  transition: transform 200ms ease-in;
+}
+
+}

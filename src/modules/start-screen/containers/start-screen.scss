@@ -1,0 +1,20 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.optionsRow {
+  background-color: #555;
+  padding: 12px 0;
+  // flex: 1;
+  // flex-basis: 48px;
+  // height: 48px;
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

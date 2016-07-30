@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { actions } from 'modules/app-screens'
-
+import classes from './start-screen.scss'
 import * as components from '../components'
 
 @connect(state => ({
@@ -29,9 +29,15 @@ export default class StartScreen extends Component {
     const { SelectKey, StartButton } = components
     const { selectedKey } = this.props
 
-    return <div>
-      <SelectKey key={selectedKey} />
-      <StartButton onClick={this.onStartClicked} />
-    </div>
+    return (
+      <div className={classes.container} key="startScreenContainer">
+        <div className={classes.optionsRow}>
+          <SelectKey key={selectedKey} />
+        </div>
+        <div className={classes.body}>
+          <StartButton onClick={this.onStartClicked} />
+        </div>
+      </div>
+      )
   }
 }
