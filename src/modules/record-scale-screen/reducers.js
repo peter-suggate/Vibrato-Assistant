@@ -1,5 +1,4 @@
 const initialState = {
-  selectedKey: 'c4'
 }
 
 export default function reducer (state = initialState, action = {}) {
@@ -10,13 +9,5 @@ export default function reducer (state = initialState, action = {}) {
 }
 
 export function getStateKey () {
-  return 'startOptions'
-}
-
-// Actions
-
-// Selectors
-
-export function getSelectedKey (state) {
-  return state.startOptions.selectedKey
+  return 'recordScaleScreen'
 }

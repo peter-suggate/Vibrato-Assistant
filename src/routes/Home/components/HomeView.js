@@ -1,12 +1,12 @@
 import React from 'react'
-// import classes from './HomeView.scss'
-import { containers } from 'modules/real-time-audio'
+import classes from './HomeView.scss'
+import { containers } from 'modules/app-screens'
 
 export const HomeView = () => {
-  const { BasicRealtimeAudioDisplay } = containers
+  const { ActiveScreen } = containers
 
-  return <div>
-    <BasicRealtimeAudioDisplay />
+  return <div className={classes.homeView}>
+    <ActiveScreen />
   </div>
 }
 

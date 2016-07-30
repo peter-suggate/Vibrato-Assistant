@@ -1,3 +1,4 @@
-// import BasicRealtimeAudioDisplay from './basic-realtime-audio-display'
+import StartScreen from './start-screen'
 
-// export { BasicRealtimeAudioDisplay }
+export default StartScreen
+export { StartScreen }

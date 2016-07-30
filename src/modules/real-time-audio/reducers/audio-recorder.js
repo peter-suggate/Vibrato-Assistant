@@ -109,7 +109,7 @@ export function addPitchMPM (pitchData) {
 export function addNote (notePitch, startTimeMsec, durationMsec) {
   return {
     type: ADD_NOTE,
-    note: {notePitch, startTimeMsec, durationMsec }
+    note: { notePitch, startTimeMsec, durationMsec }
   }
 }
 

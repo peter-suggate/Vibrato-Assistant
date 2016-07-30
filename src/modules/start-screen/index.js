@@ -1,7 +1,9 @@
-import * as containers from './containers'
-import reducer from './reducers'
+import StartScreen, * as containers from './containers'
+import reducer, { getStateKey } from './reducers/start-screen'
 
 export {
+  StartScreen,
   containers,
-  reducer
+  reducer,
+  getStateKey
 }
