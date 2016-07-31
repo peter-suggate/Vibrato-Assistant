@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react'
 import { connect } from 'react-redux'
 import { actions } from 'modules/app-screens'
 // import * as components from '../components'
+import classes from './record-scale-screen.scss'
 
 @connect(state => ({
 }))
@@ -21,8 +22,15 @@ export default class RecordScaleScreen extends Component {
   }
 
   render () {
-    return <div key="recordScaleScreenContainer">
-      <button onClick={this.onBackClicked}>Back</button>
-    </div>
+    return (
+      <div key="recordScaleScreenContainer" className={classes.container}>
+        <div className={classes.headerRow}>
+          <button onClick={this.onBackClicked}>Back</button>
+        </div>
+        <div className={classes.body}>
+          Farts
+        </div>
+      </div>
+    )
   }
 }

@@ -8,3 +8,7 @@ export function getActiveScreenContainerType (state) {
   const activeIndex = our(state).activeScreenIndex
   return getScreenContainerType(state, activeIndex)
 }
+
+export function getAllScreenContainerTypes (state) {
+  return our(state).screenContainerTypes
+}

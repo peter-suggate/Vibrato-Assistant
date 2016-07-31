@@ -21,17 +21,20 @@ export default class ActiveScreen extends Component {
   render () {
     const { activeScreenContainerType, activeScreenIndex } = this.props
     const ActiveScreen = activeScreenContainerType
-    const items = []
-    items.push(<ActiveScreen key={activeScreenIndex} />)
+    const activeScreenWrapper = (
+      <div className={classes.activeScreenWrapper} key={activeScreenIndex}>
+        <ActiveScreen />
+      </div>
+    )
 
     const transitionName = this.transitionToNextScreen ? 'transitionNext' : 'transitionPrev'
 
     return (
       <div className={classes.container}>
         <ReactCSSTransitionGroup
-          transitionName={transitionName} transitionEnterTimeout={300} transitionLeaveTimeout={200}
+          transitionName={transitionName} transitionEnterTimeout={200} transitionLeaveTimeout={100}
           >
-          {items}
+          {activeScreenWrapper}
         </ReactCSSTransitionGroup>
       </div>
       )

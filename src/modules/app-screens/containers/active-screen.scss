@@ -2,6 +2,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+
+  // Screens are absolute positioned so that they animate correctly.
+  position: relative;
 }
 
 // The span is added by ReactCSSTransitionGroup
@@ -9,6 +12,15 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+.activeScreenWrapper {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 :global {
@@ -22,7 +34,7 @@
   // opacity: 1;
   // transition: opacity 500ms ease-in;
   transform: translate(0, 0);
-  transition: transform 300ms ease-in;
+  transition: transform 200ms ease-in;
 }
 
 .transitionNext-leave {
@@ -34,7 +46,7 @@
   // opacity: 0.01;
   // transition: opacity 300ms ease-in;
   transform: translate(-100%, 0);
-  transition: transform 200ms ease-in;
+  transition: transform 100ms ease-in;
 }
 
 .transitionPrev-enter {
@@ -46,7 +58,7 @@
   // opacity: 1;
   // transition: opacity 500ms ease-in;
   transform: translate(0, 0);
-  transition: transform 300ms ease-in;
+  transition: transform 200ms ease-in;
 }
 
 .transitionPrev-leave {
@@ -58,7 +70,7 @@
   // opacity: 0.01;
   // transition: opacity 300ms ease-in;
   transform: translate(100%, 0);
-  transition: transform 200ms ease-in;
+  transition: transform 100ms ease-in;
 }
 
 }
