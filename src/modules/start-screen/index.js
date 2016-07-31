@@ -1,9 +1,14 @@
 import StartScreen, * as containers from './containers'
-import reducer, { getStateKey } from './reducers/start-screen'
+import * as actions from './actions'
+import * as selectors from './selectors'
+import { getStateKey } from './constants'
+import reducer from './reducers'
 
 export {
   StartScreen,
   containers,
   reducer,
-  getStateKey
+  selectors,
+  getStateKey,
+  actions
 }

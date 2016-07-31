@@ -323,7 +323,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     const {mainPlotPitchScaling, miniPlotPitchScaling} = this
     const {pitch} = this.state
     const {recordingAudio, recordedPitches, recordedPitchesMPM, recordedNotes, recordedTimeData} = this.props
-    const className = 'btn btn-default'
+    const className = 'primary'
 
     this.updateFps()
     const fps = this.currentFps()

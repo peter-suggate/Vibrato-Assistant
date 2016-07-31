@@ -5,9 +5,6 @@ import { reducer as appScreens, getStateKey as getAppScreensKey } from 'modules/
 import { reducer as startScreen, getStateKey as getStartScreenKey } from 'modules/start-screen'
 
 export const makeRootReducer = (asyncReducers) => {
-  const as = getAppScreensKey()
-  const asr = appScreens
-
   return combineReducers({
     // Add sync reducers here
     router,

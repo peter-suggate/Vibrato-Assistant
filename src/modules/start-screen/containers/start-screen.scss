@@ -5,8 +5,12 @@
 }
 
 .optionsRow {
-  background-color: #555;
   padding: 12px 0;
+}
+
+.optionsRow .content {
+  float: left;
+  margin-left: 12px;
 }
 
 .body {
@@ -14,4 +18,57 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+
+:global {
+
+.transitionExpand-enter {
+  // opacity: 0.01;
+  transform: translate(0, -100%);
+}
+
+.transitionExpand-enter.transitionExpand-enter-active {
+  // opacity: 1;
+  // transition: opacity 500ms ease-in;
+  transform: translate(0, 0);
+  transition: transform 200ms ease-in;
+}
+
+.transitionExpand-leave {
+  // opacity: 1;
+  transform: translate(0, 0);
+}
+
+.transitionExpand-leave.transitionExpand-leave-active {
+  // opacity: 0.01;
+  // transition: opacity 300ms ease-in;
+  transform: translate(-100%, 0);
+  transition: transform 100ms ease-in;
+}
+
+.transitionPrev-enter {
+  // opacity: 0.01;
+  transform: translate(-100%, 0);
+}
+
+.transitionPrev-enter.transitionPrev-enter-active {
+  // opacity: 1;
+  // transition: opacity 500ms ease-in;
+  transform: translate(0, 0);
+  transition: transform 200ms ease-in;
+}
+
+.transitionPrev-leave {
+  // opacity: 1;
+  transform: translate(0, 0);
+}
+
+.transitionPrev-leave.transitionPrev-leave-active {
+  // opacity: 0.01;
+  // transition: opacity 300ms ease-in;
+  transform: translate(100%, 0);
+  transition: transform 100ms ease-in;
+}
+
 }

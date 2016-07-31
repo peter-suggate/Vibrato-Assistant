@@ -1,0 +1,59 @@
+// @import 'styles/_base.scss';
+@import 'base';
+
+.container {
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+}
+
+.divider {
+  flex: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 8px 0;
+}
+
+.sectionWrapper {
+  padding: 12px;
+}
+
+.sectionHeader {
+  text-align: left;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  color: $labelColor;
+}
+
+.keyOptions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.keyOption {
+  flex: 1;
+  flex-basis: 40%;
+  text-align: left;
+  margin-left: 12px;
+}
+
+// .keyOption .keyLabel {
+//   display: inline;
+//   padding-left: 8px;
+//   font-size: 18px;
+// }
+
+.expandUp {
+  flex: 0;
+  float: right;
+  // flex-basis: 24px;
+  // border-radius: 100px;
+  // padding: 12px;
+  // margin-right: 8px;
+  // background-image: url('modules/start-screen/components/icons/up-arrow.svg');
+  // background-size: 18px;
+  // background-repeat: no-repeat;
+  // background-position: center;
+}

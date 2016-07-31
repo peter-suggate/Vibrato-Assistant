@@ -1,0 +1,53 @@
+@import 'base';
+
+.container {
+
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+  padding: 12px;
+}
+
+.option {
+  flex: 1;
+}
+
+.option div {
+  display: inline;
+  padding-right: 8px;
+}
+
+.option .label {
+  text-transform: uppercase;
+  color: $labelColor;
+}
+
+.option .value {
+  font-size: 18px;
+}
+
+.expandDown {
+  flex-basis: 24px;
+  border-radius: 100px;
+  padding: 12px;
+  margin-right: 8px;
+  background-image: url('modules/start-screen/components/icons/down-arrow.svg');
+  background-size: 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.expandDown:hover {
+  background-color: rgba(0, 0, 0, 0.15);
+  transition: background-color 300ms;
+  border-radius: 100px;
+  padding: 12px;
+}
+
+.expandDown:active {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 100px;
+  padding: 12px;
+}

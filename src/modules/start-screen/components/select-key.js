@@ -2,7 +2,8 @@ import React from 'react'
 
 export const SelectedKey = () => {
   return <div>
-    <button className="large">C#</button>
+    <div className="button-label">KEY</div>
+    <button>C Major</button>
   </div>
 }
 
