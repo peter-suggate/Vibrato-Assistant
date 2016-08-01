@@ -1,3 +1,5 @@
+@import 'base';
+
 .container {
   display: flex;
   flex-direction: column;
@@ -5,12 +7,12 @@
 }
 
 .headerRow {
-  padding: 12px 0;
+  padding: $contentMargin 0;
 }
 
 .headerRow .content {
   float: left;
-  margin-left: 12px;
+  margin-left: $contentMargin;
 }
 
 .body {

@@ -12,3 +12,15 @@ For example:
 */
 
 $labelColor: rgba(255, 255, 255, 0.5);
+
+$accentRed: 30;
+$accentGreen: 144;
+$accentBlue: 255;
+
+$accent: rgb($accentRed, $accentGreen, $accentBlue);
+$accentBright: rgb($accentRed + 20, $accentGreen + 20, $accentBlue);
+
+$buttonHoverOpacity: 0.8;
+$buttonPressedOpacity: 0.6;
+
+$contentMargin: 12px;

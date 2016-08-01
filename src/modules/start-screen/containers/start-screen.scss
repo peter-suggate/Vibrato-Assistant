@@ -1,3 +1,5 @@
+@import 'base';
+
 .container {
   display: flex;
   flex-direction: column;
@@ -5,16 +7,16 @@
 }
 
 .optionsRow {
-  padding: 12px 0;
+  padding: $contentMargin 0;
 }
 
 .optionsRow .content {
   float: left;
-  margin-left: 12px;
+  margin-left: $contentMargin;
 }
 
 .body {
-  flex: 1;
+  flex: 10;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,6 +24,24 @@
 
 
 :global {
+
+.editOptionsWrapper {
+  z-index: 1;
+}
+
+.transitionExpand-enter.optionsHeaderWrapper {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  // display: none;
+}
+
+.transitionExpand-leave.optionsHeaderWrapper {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  // display: none;
+}
 
 .transitionExpand-enter {
   // opacity: 0.01;
@@ -32,7 +52,7 @@
   // opacity: 1;
   // transition: opacity 500ms ease-in;
   transform: translate(0, 0);
-  transition: transform 200ms ease-in;
+  transition: transform 200ms ease-out;
 }
 
 .transitionExpand-leave {
@@ -43,32 +63,32 @@
 .transitionExpand-leave.transitionExpand-leave-active {
   // opacity: 0.01;
   // transition: opacity 300ms ease-in;
-  transform: translate(-100%, 0);
-  transition: transform 100ms ease-in;
+  transform: translate(0, -100%);
+  transition: transform 200ms ease-out;
 }
 
-.transitionPrev-enter {
-  // opacity: 0.01;
-  transform: translate(-100%, 0);
-}
+// .transitionCollapse-enter {
+//   // opacity: 0.01;
+//   transform: translate(0, 0);
+// }
 
-.transitionPrev-enter.transitionPrev-enter-active {
-  // opacity: 1;
-  // transition: opacity 500ms ease-in;
-  transform: translate(0, 0);
-  transition: transform 200ms ease-in;
-}
+// .transitionCollapse-enter.transitionCollapse-enter-active {
+//   // opacity: 1;
+//   // transition: opacity 500ms ease-in;
+//   transform: translate(0, -100%);
+//   transition: transform 200ms ease-in;
+// }
 
-.transitionPrev-leave {
-  // opacity: 1;
-  transform: translate(0, 0);
-}
+// .transitionCollapse-leave {
+//   // opacity: 1;
+//   transform: translate(0, 0);
+// }
 
-.transitionPrev-leave.transitionPrev-leave-active {
-  // opacity: 0.01;
-  // transition: opacity 300ms ease-in;
-  transform: translate(100%, 0);
-  transition: transform 100ms ease-in;
-}
+// .transitionCollapse-leave.transitionCollapse-leave-active {
+//   // opacity: 0.01;
+//   // transition: opacity 300ms ease-in;
+//   transform: translate(100%, 0);
+//   transition: transform 100ms ease-in;
+// }
 
 }

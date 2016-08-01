@@ -398,6 +398,8 @@ export default class BasicRealtimeAudioDisplay extends Component {
       timeDataPlot = <TimeDataPlot timeData={recordedTimeData} />
     }
 
+        // <h3>Current pitch: {pitch} Hz</h3>
+        // <h3>Current volume: {totalVolume} dB</h3>
     const audioElements = (
       <div>
         <FpsReadout fps={fps} />
@@ -412,8 +414,6 @@ export default class BasicRealtimeAudioDisplay extends Component {
           {volumePlot}
           {frequenciesPlot}
         </div>
-        <h3>Current pitch: {pitch} Hz</h3>
-        <h3>Current volume: {totalVolume} dB</h3>
         {all}
       </div>
     )

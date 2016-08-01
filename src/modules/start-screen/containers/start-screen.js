@@ -72,15 +72,19 @@ export default class StartScreen extends Component {
     let header = null
     if (editing) {
       header = (
-        <EditOptions key={'editOptions'}
-          keySignature={keySignature} mode={mode} tempo={tempo}
-          onOptionChange={this.onOptionChange} onDone={this.onEndEdit}
-        />
+        <div className="editOptionsWrapper" key={'editOptions'}>
+          <EditOptions
+            keySignature={keySignature} mode={mode} tempo={tempo}
+            onOptionChange={this.onOptionChange} onDone={this.onEndEdit}
+          />
+        </div>
       )
     } else {
       header = (
-        <OptionsHeader keySignature={keySignature} mode={mode} tempo={tempo}
-          onClick={this.onBeginEdit} key={'optionsHeader'} />
+        <div className="optionsHeaderWrapper" key={'optionsHeader'}>
+          <OptionsHeader keySignature={keySignature} mode={mode} tempo={tempo}
+            onClick={this.onBeginEdit} />
+        </div>
       )
     }
 
@@ -89,7 +93,7 @@ export default class StartScreen extends Component {
     return (
       <div className={classes.container} key="startScreenContainer">
         <ReactCSSTransitionGroup
-          transitionName={transitionName} transitionEnterTimeout={200} transitionLeaveTimeout={100}
+          transitionName={transitionName} transitionEnterTimeout={300} transitionLeaveTimeout={300}
           >
           {header}
         </ReactCSSTransitionGroup>

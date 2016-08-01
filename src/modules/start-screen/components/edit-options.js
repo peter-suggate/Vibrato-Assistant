@@ -22,9 +22,7 @@ const renderKeySignatures = (selectedKey, selectedMode, onChange) => {
 
   return (
     <div className={classes.sectionWrapper}>
-      <div className={classes.sectionHeader}>
-        Key signature
-      </div>
+      <div className={classes.sectionHeader}>Key signature</div>
       <div className={classes.keyOptions}>
         {keyElems}
       </div>
@@ -53,9 +51,7 @@ const renderMode = (selectedMode, onChange) => {
 
   return (
     <div className={classes.sectionWrapper}>
-      <div className={classes.sectionHeader}>
-        Mode
-      </div>
+      <div className={classes.sectionHeader}>Mode</div>
       <div className={classes.keyOptions}>
         {modeElems}
       </div>
@@ -63,22 +59,41 @@ const renderMode = (selectedMode, onChange) => {
   )
 }
 
-const renderTempo = () => {
+function onTempoChange (onOptionChange, e) {
+  onOptionChange({ type: 'tempo', value: Number(e.currentTarget.value) })
+}
+
+const renderTempo = (selectedTempo, onChange) => {
+  const min = 20
+  const max = 250
+
   return (
-    <div>
+    <div className={classes.sectionWrapper}>
+      <div className={classes.sectionHeader}>Tempo</div>
+      <div className={`${classes.sectionContent} ${classes.tempoContent} `}>
+        <div className={classes.sliderWrapper}>
+          <input className={classes.rowItem} type="range" id="tempoSlider" name="tempoSlider" min={min} max={max}
+            value={selectedTempo} onChange={onChange} />
+          <div className={`${classes.sliderMin} ${classes.sliderLabel}`}>{min} BPM</div>
+          <div className={`${classes.sliderMax} ${classes.sliderLabel}`}>{max} BPM</div>
+        </div>
+        <input className={classes.tempoText} type="text" value={selectedTempo} onChange={onChange} />
+      </div>
     </div>
   )
 }
 
 const renderDoneButton = (onDone) =>
   <div className={classes.expandUp}>
-    <button onClick={onDone} className="primary">Done</button>
+    <div className={classes.bottomRowContent}>
+      <button onClick={onDone} className="primary">Done</button>
+    </div>
   </div>
 
 export const EditOptions = ({ keySignature, mode, tempo, onOptionChange, onDone }) => {
   const keySignatures = renderKeySignatures(keySignature, mode, onKeyChange.bind(this, onOptionChange))
   const modes = renderMode(mode, onModeChange.bind(this, onOptionChange))
-  const tempoElems = renderTempo(tempo, onModeChange.bind(this, onOptionChange))
+  const tempoElems = renderTempo(tempo, onTempoChange.bind(this, onOptionChange))
 
   return (
     <div className={classes.container + ' floating panel'}>

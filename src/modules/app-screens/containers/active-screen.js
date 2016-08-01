@@ -32,7 +32,7 @@ export default class ActiveScreen extends Component {
     return (
       <div className={classes.container}>
         <ReactCSSTransitionGroup
-          transitionName={transitionName} transitionEnterTimeout={200} transitionLeaveTimeout={100}
+          transitionName={transitionName} transitionEnterTimeout={300} transitionLeaveTimeout={200}
           >
           {activeScreenWrapper}
         </ReactCSSTransitionGroup>
