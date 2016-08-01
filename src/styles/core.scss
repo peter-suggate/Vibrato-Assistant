@@ -88,6 +88,11 @@
     font-weight: normal;
   }
 
+  .flexColumnContainer {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
 
 
   //

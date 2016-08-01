@@ -286,7 +286,7 @@ export default class PitchPlotSVG extends Component {
     const styles = require('./Graphs.scss')
 
     return (
-      <div className={styles.pitchPlotSVG} ref="container">
+      <div className={`${styles.pitchPlotSVG} flexColumnContainer`} ref="container">
         <svg ref="svg">
           {trace}
           {staff}

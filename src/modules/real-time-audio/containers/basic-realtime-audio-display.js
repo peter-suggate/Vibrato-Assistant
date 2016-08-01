@@ -350,13 +350,13 @@ export default class BasicRealtimeAudioDisplay extends Component {
     //   )
     // }
 
-    const showVolume = true
+    const showVolume = false
     let volumePlot = null
     if (showVolume) {
       volumePlot = <VolumePlot pitches={recordedPitchesMPM} timeToPixelsRatio={0.1} />
     }
 
-    const showCanvas = true
+    const showCanvas = false
     let canvasElem = null
     let canvasElemMPM = null
     if (showCanvas) {
@@ -401,9 +401,9 @@ export default class BasicRealtimeAudioDisplay extends Component {
         // <h3>Current pitch: {pitch} Hz</h3>
         // <h3>Current volume: {totalVolume} dB</h3>
     const audioElements = (
-      <div>
+      <div className="flexColumnContainer">
         <FpsReadout fps={fps} />
-        <div className={styles.pitchPlotParentContainer}>
+        <div className={`${styles.pitchPlotParentContainer} flexColumnContainer`}>
           {timeDataPlot}
           {canvasElem}
           {canvasElemMPM}
@@ -419,7 +419,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     )
 
     return (
-      <div className="container">
+      <div className={styles.container}>
         <button className={className} onClick={this.toggleRecordingAction}>
           {recordingAudio ? 'Stop Recording' : 'Start Recording'}
         </button>

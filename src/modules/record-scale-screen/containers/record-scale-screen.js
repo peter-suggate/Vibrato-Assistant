@@ -30,7 +30,7 @@ export default class RecordScaleScreen extends Component {
             <button onClick={this.onBackClicked}>Back</button>
           </div>
         </div>
-        <div className={classes.body}>
+        <div className={`${classes.body} flexColumnContainer`}>
           <containers.BasicRealtimeAudioDisplay />
         </div>
       </div>
