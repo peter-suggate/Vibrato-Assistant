@@ -38,16 +38,14 @@
 
 .keyOption {
   flex: 1;
-  flex-basis: 40%;
+  min-width: 50px;
   text-align: left;
   margin-left: $contentMargin;
 }
 
-// .keyOption .keyLabel {
-//   display: inline;
-//   padding-left: 8px;
-//   font-size: 18px;
-// }
+.modeOption {
+  margin-left: $contentMargin;
+}
 
 .expandUp {
   display: block;

@@ -15,7 +15,7 @@ const renderKeySignatures = (selectedKey, selectedMode, onChange) => {
         <input type="radio" name={key} id={key} value={key} checked={checked ? 'checked' : ''}
           onChange={onChange} />
         <div className="check"></div>
-        <label htmlFor={key} className={classes.keyLabel}>{key + ' ' + selectedMode}</label>
+        <label htmlFor={key} className={classes.keyLabel}>{key}</label>
       </div>
     )
   })
@@ -40,7 +40,7 @@ const renderMode = (selectedMode, onChange) => {
   const modeElems = modes.map((mode, index) => {
     const checked = mode === selectedMode
     return (
-      <div className={classes.keyOption + ' radioWrapper'} key={'modeOption' + index}>
+      <div className={classes.modeOption + ' radioWrapper'} key={'modeOption' + index}>
         <input type="radio" name={mode} id={mode} value={mode} checked={checked ? 'checked' : ''}
           onChange={onChange} />
         <div className="check"></div>
@@ -52,7 +52,7 @@ const renderMode = (selectedMode, onChange) => {
   return (
     <div className={classes.sectionWrapper}>
       <div className={classes.sectionHeader}>Mode</div>
-      <div className={classes.keyOptions}>
+      <div className={classes.modeOptions}>
         {modeElems}
       </div>
     </div>
