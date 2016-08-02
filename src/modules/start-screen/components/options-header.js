@@ -11,7 +11,7 @@ const renderTempoOption = (label, val) =>
   <div className={classes.option}>
     <div className={classes.label}>{label}</div>
     <div className={classes.crotchet} />
-    <div className={classes.value}>{` = ${val}`}</div>
+    <div className={classes.value}>{`= ${val}`}</div>
   </div>
 
 export const OptionsHeader = ({ keySignature, mode, tempo, passageType, octaves, onClick }) => {
