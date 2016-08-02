@@ -1,17 +1,17 @@
 import { our } from './constants'
 
 export function getKey (state) {
-  return our(state).key
+  return our(state).get('key')
 }
 
 export function getMode (state) {
-  return our(state).mode
+  return our(state).get('mode')
 }
 
 export function getTempo (state) {
-  return our(state).tempo
+  return our(state).get('tempo')
 }
 
 export function isEditing (state) {
-  return our(state).editing
+  return our(state).get('editing')
 }

@@ -1,25 +1,26 @@
 import * as constants from './constants'
+import Immutable from 'immutable'
 
-const initialState = {
+const initialState = Immutable.fromJS({
   key: 'C',
   mode: constants.MODE_MAJOR,
   tempo: 60,
   editing: false
-}
+})
 
 export default function reducer (state = initialState, action = {}) {
   switch (action.type) {
     case constants.OPTIONS_SET_EDITING: {
-      return { ...state, editing: action.editing }
+      return state.set('editing', action.editing)
     }
     case constants.OPTIONS_SET_KEY: {
-      return { ...state, key: action.key }
+      return state.set('key', action.key)
     }
     case constants.OPTIONS_SET_MODE: {
-      return { ...state, mode: action.mode }
+      return state.set('mode', action.mode)
     }
     case constants.OPTIONS_SET_TEMPO: {
-      return { ...state, tempo: action.tempo }
+      return state.set('tempo', action.tempo)
     }
     default:
       return state
