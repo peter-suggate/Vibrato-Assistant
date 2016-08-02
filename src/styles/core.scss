@@ -45,7 +45,7 @@
     border: none;
     font-size: 18px;
     padding: 4px $contentMargin;
-    box-shadow: 0px 2px 4px #333;
+    box-shadow: 0px 2px 8px black;
   }
 
   button.primary {
@@ -94,6 +94,11 @@
     flex: 1;
   }
 
+  .flexRowWrapContainer {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
 
   //
   // Styled radio input

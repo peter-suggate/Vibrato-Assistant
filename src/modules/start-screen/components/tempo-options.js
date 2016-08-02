@@ -6,7 +6,7 @@ function onTempoChange (onOptionChange, e) {
 import React, { Component, PropTypes } from 'react'
 import classes from './edit-options.scss'
 
-class Tempo extends Component {
+class TempoOptions extends Component {
   static propTypes = {
     selectedTempo: PropTypes.number.isRequired,
     onChange: PropTypes.func.isRequired
@@ -16,6 +16,10 @@ class Tempo extends Component {
     super()
 
     this.onTempoChange = this.onTempoChange.bind(this)
+  }
+
+  shouldComponentUpdate (nextProps) {
+    return this.props.selectedTempo !== nextProps.selectedTempo
   }
 
   onTempoChange (e) {
@@ -45,4 +49,4 @@ class Tempo extends Component {
   }
 }
 
-export default Tempo
+export default TempoOptions

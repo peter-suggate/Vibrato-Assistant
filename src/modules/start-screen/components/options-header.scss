@@ -7,26 +7,43 @@
 .content {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   padding: $contentMargin;
   cursor: pointer;
 }
 
+.optionsWrapper {
+  flex: 1;
+}
+
 .option {
   flex: 1;
+  min-width: 120px;
+  text-align: left;
 }
 
 .option div {
   display: inline;
-  padding-right: 8px;
+  padding: 6px;
 }
 
 .option .label {
   text-transform: uppercase;
   color: $labelColor;
+  display: inline-block;
+  min-width: 66px;
+  text-align: right;
 }
 
 .option .value {
   font-size: 18px;
+}
+
+.crotchet {
+  background-image: url('modules/start-screen/components/icons/quarter-note-white.svg');
+  background-size: 18px;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .expandDown {

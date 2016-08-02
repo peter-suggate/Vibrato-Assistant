@@ -30,12 +30,6 @@
   flex-direction: row;
 }
 
-.keyOptions {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-
 .keyOption {
   flex: 1;
   min-width: 50px;
@@ -44,6 +38,24 @@
 }
 
 .modeOption {
+  min-width: 99px;
+  margin-left: $contentMargin;
+}
+
+.passageTypeOption {
+  min-width: 99px;
+  margin-left: $contentMargin;
+}
+
+.octaveOptions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.octaveOption {
+  flex: 1;
+  min-width: 50px;
   margin-left: $contentMargin;
 }
 

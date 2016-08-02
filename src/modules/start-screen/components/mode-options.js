@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import classes from './edit-options.scss'
 
-class Mode extends Component {
+class ModeOptions extends Component {
   static propTypes = {
     selectedMode: PropTypes.string.isRequired,
     onChange: PropTypes.func.isRequired
@@ -11,6 +11,10 @@ class Mode extends Component {
     super()
 
     this.onModeChange = this.onModeChange.bind(this)
+  }
+
+  shouldComponentUpdate (nextProps) {
+    return this.props.selectedMode !== nextProps.selectedMode
   }
 
   onModeChange (e) {
@@ -36,7 +40,7 @@ class Mode extends Component {
     return (
       <div className={classes.sectionWrapper}>
         <div className={classes.sectionHeader}>Mode</div>
-        <div className={classes.modeOptions}>
+        <div className={`${classes.modeOptions} flexRowWrapContainer`}>
           {modeElems}
         </div>
       </div>
@@ -44,4 +48,4 @@ class Mode extends Component {
   }
 }
 
-export default Mode
+export default ModeOptions

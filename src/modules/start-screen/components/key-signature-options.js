@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import classes from './edit-options.scss'
 
-class KeySignatures extends Component {
+class KeySignatureOptions extends Component {
   static propTypes = {
     selectedKey: PropTypes.string.isRequired,
     onChange: PropTypes.func.isRequired
@@ -41,7 +41,7 @@ class KeySignatures extends Component {
     return (
       <div className={classes.sectionWrapper}>
         <div className={classes.sectionHeader}>Key signature</div>
-        <div className={classes.keyOptions}>
+        <div className={`${classes.keyOptions} flexRowWrapContainer`}>
           {keyElems}
         </div>
       </div>
@@ -49,4 +49,4 @@ class KeySignatures extends Component {
   }
 }
 
-export default KeySignatures
+export default KeySignatureOptions

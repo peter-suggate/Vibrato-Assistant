@@ -33,6 +33,28 @@ export function setTempo (tempo) {
   }
 }
 
+export function setOctaves (octaves) {
+  if (octaves === null || octaves === undefined) {
+    throw Error('start-screen|setOctaves() invalid number of octaves specified', octaves)
+  }
+
+  return {
+    type: constants.OPTIONS_SET_OCTAVES,
+    octaves
+  }
+}
+
+export function setPassageType (passageType) {
+  if (passageType === null || passageType === undefined) {
+    throw Error('start-screen|setPassageType() invalid number of octaves specified', passageType)
+  }
+
+  return {
+    type: constants.OPTIONS_SET_PASSAGE_TYPE,
+    passageType
+  }
+}
+
 export function setEditing (editing) {
   return {
     type: constants.OPTIONS_SET_EDITING,

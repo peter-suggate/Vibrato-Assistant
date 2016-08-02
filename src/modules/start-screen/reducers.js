@@ -5,6 +5,8 @@ const initialState = Immutable.fromJS({
   key: 'C',
   mode: constants.MODE_MAJOR,
   tempo: 60,
+  octaves: 2,
+  passageType: constants.PASSAGE_SCALE,
   editing: false
 })
 
@@ -21,6 +23,12 @@ export default function reducer (state = initialState, action = {}) {
     }
     case constants.OPTIONS_SET_TEMPO: {
       return state.set('tempo', action.tempo)
+    }
+    case constants.OPTIONS_SET_OCTAVES: {
+      return state.set('octaves', action.octaves)
+    }
+    case constants.OPTIONS_SET_PASSAGE_TYPE: {
+      return state.set('passageType', action.passageType)
     }
     default:
       return state

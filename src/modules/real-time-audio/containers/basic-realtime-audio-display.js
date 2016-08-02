@@ -374,7 +374,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     let svgElem = null
     if (showSVG) {
       svgElem = <PitchPlotSVG pitches={recordedPitchesMPM} notes={scaleNotes}
-        pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.1} />
+        pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.03} />
     }
 
     const showMini = false

@@ -173,12 +173,14 @@ export default class PitchPlotSVG extends Component {
         }
 
         const key = 'pitch_line_' + index
-        const colorIntensity = Math.floor((0.2 * 255) + (0.8 * 255 * volume))
+        // const colorIntensity = Math.floor((0.2 * 255) + (0.8 * 255 * volume))
+        const colorIntensity = 255
         const color = `rgb(
           ${Math.floor(colorIntensity * red)},
           ${Math.floor(colorIntensity * green)},
           ${Math.floor(colorIntensity * blue)}` + ')'
-        const strokeWidth = `${0.5 + (volume * 5)}`
+        // const strokeWidth = `${0.5 + (volume * 5)}`
+        const strokeWidth = '2'
         lines.push(
           <line {...coords} strokeLinecap="round" stroke={color} strokeWidth={strokeWidth} key={key} />
         )

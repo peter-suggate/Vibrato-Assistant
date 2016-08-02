@@ -11,6 +11,8 @@ import * as actions from '../actions'
   keySignature: selectors.getKey(state),
   mode: selectors.getMode(state),
   tempo: selectors.getTempo(state),
+  octaves: selectors.getOctaves(state),
+  passageType: selectors.getPassageType(state),
   editing: selectors.isEditing(state)
 }))
 export default class StartScreen extends Component {
@@ -18,6 +20,8 @@ export default class StartScreen extends Component {
     keySignature: PropTypes.string.isRequired,
     mode: PropTypes.string.isRequired,
     tempo: PropTypes.number.isRequired,
+    octaves: PropTypes.number.isRequired,
+    passageType: PropTypes.string.isRequired,
     editing: PropTypes.bool,
     dispatch: PropTypes.func.isRequired
   }
@@ -50,6 +54,12 @@ export default class StartScreen extends Component {
       case 'tempo':
         dispatch(actions.setTempo(option.value))
         break
+      case 'octaves':
+        dispatch(actions.setOctaves(option.value))
+        break
+      case 'passageType':
+        dispatch(actions.setPassageType(option.value))
+        break
       default:
         throw Error('start-screen|onOptionChange: unhandled option', option.type)
     }
@@ -67,7 +77,7 @@ export default class StartScreen extends Component {
 
   render () {
     const { OptionsHeader, EditOptions, StartButton } = components
-    const { editing, keySignature, mode, tempo } = this.props
+    const { editing, keySignature, mode, tempo, octaves, passageType } = this.props
 
     let header = null
     if (editing) {
@@ -75,6 +85,7 @@ export default class StartScreen extends Component {
         <div className="editOptionsWrapper" key={'editOptions'}>
           <EditOptions
             keySignature={keySignature} mode={mode} tempo={tempo}
+            octaves={octaves} passageType={passageType}
             onOptionChange={this.onOptionChange} onDone={this.onEndEdit}
           />
         </div>
@@ -83,6 +94,7 @@ export default class StartScreen extends Component {
       header = (
         <div className="optionsHeaderWrapper" key={'optionsHeader'}>
           <OptionsHeader keySignature={keySignature} mode={mode} tempo={tempo}
+            passageType={passageType} octaves={octaves}
             onClick={this.onBeginEdit} />
         </div>
       )

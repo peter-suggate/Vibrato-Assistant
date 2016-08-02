@@ -1,8 +1,9 @@
-import React, { Component, PropTypes } from 'react'
+import React from 'react'
 import classes from './edit-options.scss'
-import KeySignatures from './key-signatures'
-import Mode from './mode'
-import Tempo from './tempo'
+import KeySignatureOptions from './key-signature-options'
+import ModeOptions from './mode-options'
+import TempoOptions from './tempo-options'
+import PassageTypeOptions from './passage-type-options'
 
 const renderDoneButton = (onDone) =>
   <div className={classes.expandUp}>
@@ -11,14 +12,18 @@ const renderDoneButton = (onDone) =>
     </div>
   </div>
 
-export const EditOptions = ({ keySignature, mode, tempo, onOptionChange, onDone }) => {
-  const keySignatures = <KeySignatures selectedKey={keySignature} onChange={onOptionChange} />
-  const modes = <Mode selectedMode={mode} onChange={onOptionChange} />
-  const tempoElems = <Tempo selectedTempo={tempo} onChange={onOptionChange} />
+export const EditOptions = ({ keySignature, mode, tempo, octaves, passageType, onOptionChange, onDone }) => {
+  const keySignatures = <KeySignatureOptions selectedKey={keySignature} onChange={onOptionChange} />
+  const modes = <ModeOptions selectedMode={mode} onChange={onOptionChange} />
+  const tempoElems = <TempoOptions selectedTempo={tempo} onChange={onOptionChange} />
+  const passageTypeElems = <PassageTypeOptions selectedOctaves={octaves} selectedPassageType={passageType}
+    onChange={onOptionChange} />
 
   return (
     <div className={classes.container + ' floating panel'}>
       <div className={classes.content}>
+        {passageTypeElems}
+        <div className={classes.divider} />
         {modes}
         <div className={classes.divider} />
         {keySignatures}
