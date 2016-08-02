@@ -135,7 +135,7 @@ webpackConfig.module.loaders = [{
       'transform-class-properties',
       'transform-react-display-name'
     ],
-    presets: ['es2015', 'react', 'stage-0'],
+    presets: ['react', 'es2015', 'stage-0', 'react-hmre'],
     env: {
       production: {
         presets: ['react-optimize']
