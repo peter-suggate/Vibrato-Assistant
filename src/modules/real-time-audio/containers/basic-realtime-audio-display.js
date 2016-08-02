@@ -385,7 +385,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
         timeToPixelsRatio={0.5} />
     }
 
-    const showFrequencies = true
+    const showFrequencies = false
     let frequenciesPlot = null
     if (showFrequencies) {
       const frequencyData = getLatestFrequencyData()
