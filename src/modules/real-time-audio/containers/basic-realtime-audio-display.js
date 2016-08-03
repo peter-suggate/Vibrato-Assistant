@@ -40,6 +40,7 @@ import {getNotesForKey} from 'lib/audio/scale-notes'
 import {
   SHOW_LIVE_TIME_DATA
 } from 'app-consts'
+import * as selectors from 'modules/start-screen/selectors'
 
 const useVariableNoteRecorder = true
 const FPS_WINDOW_SIZE = 40
@@ -51,7 +52,7 @@ const MINI_PLOT_SCALING_WINDOW_WIDTH_MS = 1000
 const MINI_PLOT_SCALING_PAD = 2 * logOfDifferenceBetweenAdjacentSemitones()
 
 const UPDATE_SCALING = false
-const FAKE_DATA = false
+const FAKE_DATA = true
 const SHOW_COMPARISON_PITCHES = false
 
 @connect(
@@ -61,7 +62,12 @@ const SHOW_COMPARISON_PITCHES = false
     recordedPitchesMPM: state.audioRecorder.recordedPitchesMPM,
     recordedNotes: state.audioRecorder.recordedNotes,
     recordedTimeData: state.audioRecorder.recordedTimeData,
-    animationCounter: state.audioRecorder.animationCounter
+    animationCounter: state.audioRecorder.animationCounter,
+    keySignature: selectors.getKey(state),
+    mode: selectors.getMode(state),
+    tempo: selectors.getTempo(state),
+    octaves: selectors.getOctaves(state),
+    passageType: selectors.getPassageType(state)
   })
   )
 export default class BasicRealtimeAudioDisplay extends Component {
@@ -71,6 +77,11 @@ export default class BasicRealtimeAudioDisplay extends Component {
     recordedPitches: PropTypes.array,
     recordedPitchesMPM: PropTypes.array,
     recordedTimeData: PropTypes.array,
+    keySignature: PropTypes.string.isRequired,
+    mode: PropTypes.string.isRequired,
+    tempo: PropTypes.number.isRequired,
+    octaves: PropTypes.number.isRequired,
+    passageType: PropTypes.string.isRequired,
     dispatch: PropTypes.func.isRequired
   }
 
@@ -229,7 +240,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     }
 
     if (FAKE_DATA) {
-      this.addPitchAction({
+      this.addPitchMPMAction({
         pitch: nextFakePitch(),
         offsetCents: -20 + Math.random() * 40,
         volume: nextFakeVolume(),
@@ -322,7 +333,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
 
     const {mainPlotPitchScaling, miniPlotPitchScaling} = this
     const {pitch} = this.state
-    const {recordingAudio, recordedPitches, recordedPitchesMPM, recordedNotes, recordedTimeData} = this.props
+    const {recordingAudio, recordedPitches, recordedPitchesMPM, recordedNotes, recordedTimeData, octaves, keySignature, tempo} = this.props
     const className = 'primary'
 
     this.updateFps()
@@ -336,19 +347,10 @@ export default class BasicRealtimeAudioDisplay extends Component {
       mainPlotPitchScaling.updateVerticalScaling(recordedPitchesMPM)
     }
 
-    const scaleNotes = getNotesForKey('C', 60)
+    const scaleNotes = getNotesForKey(keySignature, octaves, tempo)
 
-    // const showAll = false
+    // const scaleDurationSec = scaleNotes.length * (tempo / 60)
     let all = null
-    // if (showAll) {
-    //   all = (
-    //     <div>
-    //       <AudioVolume volumes={volumes} />
-    //       <AudioPitch pitch={pitch} />
-    //       <MusicNotationPanel pitches={recordedNotes} />
-    //     </div>
-    //   )
-    // }
 
     const showVolume = false
     let volumePlot = null
@@ -374,7 +376,7 @@ export default class BasicRealtimeAudioDisplay extends Component {
     let svgElem = null
     if (showSVG) {
       svgElem = <PitchPlotSVG pitches={recordedPitchesMPM} notes={scaleNotes}
-        pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.03} />
+        pitchScaling={mainPlotPitchScaling} timeToPixelsRatio={0.04} />
     }
 
     const showMini = false

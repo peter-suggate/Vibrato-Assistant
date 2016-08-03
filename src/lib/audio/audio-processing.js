@@ -47,6 +47,9 @@ const MAJOR_KEY_NOTE_SIZES = [0, 2, 2, 1, 2, 2, 2, 1]
 export function noteIndexInMajorKeyToSemitoneIndex (noteIndex) {
   let semitones = 0
 
+  semitones += 12 * (Math.floor(noteIndex / 7))
+  noteIndex = noteIndex % 7
+
   for (let idx = 0; idx < noteIndex + 1; idx++) {
     semitones += MAJOR_KEY_NOTE_SIZES[idx]
   }
